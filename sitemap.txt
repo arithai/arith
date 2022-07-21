@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+
+
+<url>
+  <loc>https://arithai.github.io/arith/</loc>
+  <lastmod>2022-07-21T12:40:17+00:00</lastmod>
+  <priority>1.00</priority>
+</url>
+<url>
+  <loc>https://arithai.github.io/arith/%E4%BB%99%E4%B8%B9%E8%8A%B1.htm</loc>
+  <lastmod>2022-07-21T12:40:17+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://arithai.github.io/arith/%E9%87%91%E9%9C%B2%E8%8A%B1.htm</loc>
+  <lastmod>2022-07-21T12:40:17+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://arithai.github.io/arith/%E7%99%BD%E6%B0%B4%E6%9C%A8.htm</loc>
+  <lastmod>2022-07-21T12:40:17+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+<url>
+  <loc>https://arithai.github.io/arith/index.html</loc>
+  <lastmod>2022-07-21T12:40:17+00:00</lastmod>
+  <priority>0.80</priority>
+</url>
+
+
+</urlset>
