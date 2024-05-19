@@ -322,7 +322,7 @@ print $title;
 </title>
 </head>
 <body background=<?php print $udir."/back0.gif" ?>
-<a href=https://youtu.be/k1HZZykRExs>最新資訊2024.04.15[</a><?php echo $_SERVER['SERVER_NAME']; ?>][
+<a href=https://youtu.be/k1HZZykRExs>最新資訊2024.05.19[</a><?php echo $_SERVER['SERVER_NAME']; ?>][
 <?php echo $_SERVER['HTTP_HOST']; ?>]
 
 <div id="sfcs5julx2kdxaf3xay4t9kwy8zj2se7yl7"></div> 
