@@ -1,5 +1,5 @@
-?<?php
-// ¨ú±o¸ê®Æ data.txt
+ï»¿<?php
+// å–å¾—è³‡æ–™ data.txt
 //print "<hr color=red>";
 //Revision 2010.04.14 directory structure change
 //  c:\ccdsm\bin\treenet\index,php
@@ -68,7 +68,7 @@
 //  print "$IDA[$ii] ....<hr>";
     if ($IDMAX < $IDA[$line_num]) $IDMAX=$IDA[$line_num];
   }	
-//$IDMAX ³Ì¤j ID
+//$IDMAX æœ€å¤§ ID
   $IDMAXA=$IDMAX+1001;
   $IDMAXA=substr($IDMAXA,1);
 //print "<hr color=red>ID1=$ID1<hr>";
@@ -114,7 +114,7 @@
     if ($ID1==$IDB[$ii]) $nn++;
   }
 
-  if($fun=="delafter" && $ID1 > 0) { // ¨S¦³²Ä¤@µ§
+  if($fun=="delafter" && $ID1 > 0) { // æ²’æœ‰ç¬¬ä¸€ç­†
     $fp = fopen($fdata, "w");
     $fdata=sprintf("data.txt  ID1(3), ID2(3), CLID(3), Title(20), Description(20), Body(20)\n");
     fwrite($fp, $fdata);
@@ -141,7 +141,7 @@
       if ($ID1==$IDB[$ii]) $nn++;
     }      
   }	
-  if($fun=="manafter") { // ¨S¦³²Ä¤@µ§
+  if($fun=="manafter") { // æ²’æœ‰ç¬¬ä¸€ç­†
     $fp = fopen($fdata, "w");
     $fdata=sprintf("data.txt  ID1(3), ID2(3), CLID(3), Title(20), Description(20), Body(20)\n");
 //  echo "fdata=".$fdata."<hr>";
@@ -183,12 +183,12 @@
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=big5' />
 <meta http-equiv='expires' content='-1'>
-<title>".$IDT[$IDii].",«Î»ùºô,µL»ùºô,ª«»ùºô,¤­»ùºô,¶}»ù,­q»ù,¥X»ù,°â»ù,¦¨¥æ»ù,¦¨¥»»ù,2024
+<title>".$IDT[$IDii].",å±‹åƒ¹ç¶²,ç„¡åƒ¹ç¶²,ç‰©åƒ¹ç¶²,äº”åƒ¹ç¶²,é–‹åƒ¹,è¨‚åƒ¹,å‡ºåƒ¹,å”®åƒ¹,æˆäº¤åƒ¹,æˆæœ¬åƒ¹,2024
 </title>
 </head>
 <body background=".$udira."/back0.gif>".$_SERVER['SERVER_NAME']."<table cellspacing=0 cellpadding=0 width='100%' height='100%' border=0>
 <td colspan=2 align=center bgcolor=#AAFFFF><font size=+2>
-".$IDD[$IDii]."<br><!--¾ğºô(tree net) ---  description ¥iÅÜ!   ---->
+".$IDD[$IDii]."<br><!--æ¨¹ç¶²(tree net) ---  description å¯è®Š!   ---->
 <hr><tr>";
     }
     else { 
@@ -208,16 +208,20 @@ else
       $fdata.="<script type='text/javascript' src='http://js1.bloggerads.net/showbanner.aspx?blogid=20120109000042&amp;charset=utf-8'></script>";
 }
       $fdata.="
-<!-- Counter Code START --><a href='http://www.e-zeeinternet.com/' target='_blank'><img src='http://www.e-zeeinternet.com/count.php?page=1081173&amp;style=default&amp;nbdigits=5' alt='HTML Hit Counter' border='0' /></a><a href='http://www.e-zeeinternet.com/' title='HTML Hit Counter' target='_blank' style='font-family: Geneva, Arial, Helvetica, sans-serif; font-size: 10px; color: #000000; text-decoration: none;'>HTML Hit Counter</a><!-- Counter Code END -->
-&nbsp;<a href='/page/guestbook.php'><img src=a5.gif alt='Guest Book' border=0>-°Q½×°Ï<font size=+3>GuestBook</a></a>"
+<!-- Counter Code START --><a href='http://www.e-zeeinternet.com/' target='_blank'>
+<img src='http://www.e-zeeinternet.com/count.php?page=1081173&amp;style=default&amp;nbdigits=5' alt='HTML Hit Counter' border='0' />
+</a><a href='http://www.e-zeeinternet.com/' title='HTML Hit Counter' target='_blank' 
+style='font-family: Geneva, Arial, Helvetica, sans-serif; font-size: 10px; color: #000000; text-decoration: none;'>HTML Hit Counter
+</a><!-- Counter Code END --><img src=a5.gif alt='Guest Book' border=0>
+<a href='/page/guestbook.php'>-è¨è«–å€<font size=+3>GuestBook</a></a><br>"
 ;
 
       if($isGen==1) { 
-        $fdata.=$IDO[$IDii]."  <!----  body ¥iÅÜ!   ---->\n";
+        $fdata.=$IDO[$IDii]."  <!----  body å¯è®Š!   ---->\n";
       }
       else { 
         $fdata.=str_replace("src=","src=".$udira."/",
-                $IDO[$IDii])."  <!----  body ¥iÅÜ!   ---->\n";
+                $IDO[$IDii])."  <!----  body å¯è®Š!   ---->\n";
       }
     }
     else {  	
@@ -247,17 +251,22 @@ else
 }
 
       $fdata.="
-<!-- Counter Code START --><a href='http://www.e-zeeinternet.com/' target='_blank'><img src='http://www.e-zeeinternet.com/count.php?page=1081173&amp;style=default&amp;nbdigits=5' alt='HTML Hit Counter' border='0' /></a><a href='http://www.e-zeeinternet.com/' title='HTML Hit Counter' target='_blank' style='font-family: Geneva, Arial, Helvetica, sans-serif; font-size: 10px; color: #000000; text-decoration: none;'>HTML Hit Counter</a><!-- Counter Code END -->
-<!-- Counter Code START --><a href='http://www.e-zeeinternet.com/' target='_blank'><img src='http://www.e-zeeinternet.com/count.php?page=1154517&style=default&nbdigits=5&reloads=1' alt='Free Counter' border='0' ></a><br><a href='http://www.e-zeeinternet.com/' title='Free Counter' target='_blank' style='font-family: Geneva, Arial, Helvetica, sans-serif; font-size: 10px; color: #000000; text-decoration: none;'>Free Counter</a><!-- Counter Code END -->
-&nbsp;<a href='/page/guestbook.php'><img src=a5.gif alt='Guest Book' border=0>-°Q½×°ÏGuestBook</a>"
+<!-- Counter Code START --><a href='http://www.e-zeeinternet.com/' target='_blank'>
+<img src='http://www.e-zeeinternet.com/count.php?page=1154517&style=default&nbdigits=5&reloads=1' alt='Free Counter' border='0' >
+</a><br><a href='http://www.e-zeeinternet.com/' title='Free Counter' target='_blank' 
+style='font-family: Geneva, Arial, Helvetica, sans-serif; font-size: 10px; color: #000000; text-decoration: none;'>
+Free Counter</a><!-- Counter Code END -->
+&nbsp;
+<img src=a5.gif alt='Guest Book' border=0>
+<a href='/page/guestbook.php'>-è¨è«–å€GuestBook</a><br>"
 ;
 
       if($isGen==1) { 
-        $fdata.=$IDO[$IDii]."  <!----  body ¥iÅÜ!   ---->\n";
+        $fdata.=$IDO[$IDii]."  <!----  body å¯è®Š!   ---->\n";
       }
       else { 
         $fdata.=str_replace("src=","src=".$udira."/",
-                $IDO[$IDii])."  <!----  body ¥iÅÜ!   ---->\n";
+                $IDO[$IDii])."  <!----  body å¯è®Š!   ---->\n";
       }
 
       $fdata.="</td><td width='15%' bgcolor=#AAFFFF height='".$hvv."%'><a href=";
@@ -287,14 +296,14 @@ else
             if ($isman) $fdata.= "u=$u&p=$p&";
             $fdata.="ID1=".$IDA[$kk]."&udir=".$udir;
           }
-          $fdata.="><font size=+1>".$IDT[$kk]."</a></td></tr><!----  title ¥iÅÜ!   ---->\n";
+          $fdata.="><font size=+1>".$IDT[$kk]."</a></td></tr><!----  title å¯è®Š!   ---->\n";
         }  
       }
     }  
     if($isGen==1) {
       $fdata.="</td></tr><tr><td colspan=2 align=right>\n";
-      $fdata.="<a href=".$IDUP.".htm>¤W¥Ø¿ı</a>&nbsp;&nbsp;&nbsp;\n";
-      $fdata.="<a href=index.htm>­º­¶</a>&nbsp;&nbsp;&nbsp;\n";
+      $fdata.="<a href=".$IDUP.".htm>ä¸Šç›®éŒ„</a>&nbsp;&nbsp;&nbsp;\n";
+      $fdata.="<a href=index.htm>é¦–é </a>&nbsp;&nbsp;&nbsp;\n";
       $fdata.="</table></body></html>\n";
     }
     return $fdata;
@@ -309,11 +318,11 @@ else
 <title>
 <?php
 print $title;
-?>,«Î»ùºô,µL»ùºô,ª«»ùºô,¤­»ùºô,¶}»ù,­q»ù,¥X»ù,°â»ù,¦¨¥æ»ù,¦¨¥»»ù,2024
+?>,å±‹åƒ¹ç¶²,ç„¡åƒ¹ç¶²,ç‰©åƒ¹ç¶²,äº”åƒ¹ç¶²,é–‹åƒ¹,è¨‚åƒ¹,å‡ºåƒ¹,å”®åƒ¹,æˆäº¤åƒ¹,æˆæœ¬åƒ¹,2024
 </title>
 </head>
 <body background=<?php print $udir."/back0.gif" ?>
-<a href=https://youtu.be/k1HZZykRExs>³Ì·s¸ê°T2024.02.27[</a><?php echo $_SERVER['SERVER_NAME']; ?>][
+<a href=https://youtu.be/k1HZZykRExs>æœ€æ–°è³‡è¨Š2024.04.15[</a><?php echo $_SERVER['SERVER_NAME']; ?>][
 <?php echo $_SERVER['HTTP_HOST']; ?>]
 
 <div id="sfcs5julx2kdxaf3xay4t9kwy8zj2se7yl7"></div> 
@@ -325,7 +334,7 @@ print $title;
 
 <?php
 print $description;
-?>,<a href=#>©Ğ«Î¥X¯²</a>,<a href=#>©Ğ«Î¥X°â</a><br><!--¾ğºô(tree net) ---  description ¥iÅÜ!   ---->
+?>,<a href=#>æˆ¿å±‹å‡ºç§Ÿ</a>,<a href=#>æˆ¿å±‹å‡ºå”®</a><br><!--æ¨¹ç¶²(tree net) ---  description å¯è®Š!   ---->
 <hr> 
 <?php
 function upload_back() { 
@@ -398,13 +407,13 @@ if ($isman && $fun=='upload') {
 if ($isman && ($fun=='add' || $fun=='man' || $fun=='del')) {
   print "<tr><td colspan=2 align=center bgcolor=#AAEEFF>\n";
   if($fun=='add') {
-    print "·s¼W";
+    print "æ–°å¢";
   }
   else if($fun=='man') {
-    print "­×§ï";
+    print "ä¿®æ”¹";
   }	
   else if($fun=='del') {
-    print "§R°£";
+    print "åˆªé™¤";
   }	  
   print "</td></tr>\n";
 
@@ -413,7 +422,7 @@ if ($isman && ($fun=='add' || $fun=='man' || $fun=='del')) {
     <input type='file'   name='attachement' ></input>
     <input type='hidden' name='attachement_loos' value='", $globals['attachement'] ,"'></input>
     <input type='hidden' name='fun' value='upload'></input>
-    <input type='submit' value='¤W¶Ç¹Ï¤ù'></input>
+    <input type='submit' value='ä¸Šå‚³åœ–ç‰‡'></input>
   </table></form></center>\n"; 
 
   print "<tr><td colspan=2 align=left>\n";
@@ -438,32 +447,32 @@ if ($isman && ($fun=='add' || $fun=='man' || $fun=='del')) {
   }	
   else 
     print ">\n";
-  print "³s±µ©ïÀY=<input type=text name='txt_title' size=20 value='";
+  print "é€£æ¥æŠ¬é ­=<input type=text name='txt_title' size=20 value='";
   if($fun=='man' || $fun=='del') {
     print $title;
   }	
   print "'  maxlength=20><br>\n";
-  print "©ïÀY´y­z=<input type=text name='txt_description'  value='";
+  print "æŠ¬é ­æè¿°=<input type=text name='txt_description'  value='";
   if($fun=='man' || $fun=='del') {
     print $description;
   }	
   print "' size=20 maxlength=20><br>\n";
 
-  print "ªí¨­´y­z=<textarea cols=100 rows=22 name='txt_body'>\n";
-//print "ªí¨­´y­z=<input type=text name='txt_body' size=80  value='";  
+  print "è¡¨èº«æè¿°=<textarea cols=100 rows=22 name='txt_body'>\n";
+//print "è¡¨èº«æè¿°=<input type=text name='txt_body' size=80  value='";  
   if($fun=='man' || $fun=='del') {
     print str_replace("<br>","\n",$body);
   }	
   print "</textarea><br>\n";
 //print "' maxlength=200><br>\n";
 
-  print "<input type='submit' value='½T©w'>\n";
+  print "<input type='submit' value='ç¢ºå®š'>\n";
   print "</form>";
   printf("</td></tr>\n");
 }	
 if ($isman && $fun=='gen') {
   print "<tr><td colspan=2 align=center bgcolor=#FF0000>\n";
-  print "<a href=".$udir."/>¥Í¦¨ºô­¶</a>";
+  print "<a href=".$udir."/>ç”Ÿæˆç¶²é </a>";
   for ($ii=1;$ii<=$IDN;$ii++) {
     if($ii==1) {
       $fdata=$udir."/index.htm";
@@ -487,19 +496,19 @@ echo $fdata;
 if ($ID1 > 0) {
   print "<a href=index.php?";
   if ($isman) print "u=$u&p=$p&";
-  print "ID1=".$IDUP."&udir=$udir>¤W¥Ø¿ı</a>&nbsp;&nbsp;&nbsp;\n";
+  print "ID1=".$IDUP."&udir=$udir>ä¸Šç›®éŒ„</a>&nbsp;&nbsp;&nbsp;\n";
   print "<a href=index.php?";
   if ($isman) print "u=$u&p=$p&";
-  print "udir=$udir>­º­¶</a>&nbsp;&nbsp;&nbsp;\n";
+  print "udir=$udir>é¦–é </a>&nbsp;&nbsp;&nbsp;\n";
 }  
 if ( $isman) {
   if($ID1==0)
-    print "<a href=index.php?u=$u&p=$p&udir=$udir&ID1=$ID1&fun=gen>¥Í¦¨ºô­¶</a>&nbsp;&nbsp;&nbsp;\n";
-  print "<a href=index.php?u=$u&p=$p&udir=$udir&ID1=$ID1&fun=man>ºûÅ@¥»­¶</a>&nbsp;&nbsp;&nbsp;\n";
+    print "<a href=index.php?u=$u&p=$p&udir=$udir&ID1=$ID1&fun=gen>ç”Ÿæˆç¶²é </a>&nbsp;&nbsp;&nbsp;\n";
+  print "<a href=index.php?u=$u&p=$p&udir=$udir&ID1=$ID1&fun=man>ç¶­è­·æœ¬é </a>&nbsp;&nbsp;&nbsp;\n";
   if ($ID1 > 0) {
-    print "<a href=index.php?u=$u&p=$p&udir=$udir&ID1=$ID1&fun=del>§R°£¥»­¶</a>&nbsp;&nbsp;&nbsp;\n";
+    print "<a href=index.php?u=$u&p=$p&udir=$udir&ID1=$ID1&fun=del>åˆªé™¤æœ¬é </a>&nbsp;&nbsp;&nbsp;\n";
   }  
-  print "<a href=index.php?u=$u&p=$p&udir=$udir&ID1=$ID1&fun=add>·s¼W¤l­¶</a>\n";
+  print "<a href=index.php?u=$u&p=$p&udir=$udir&ID1=$ID1&fun=add>æ–°å¢å­é </a>\n";
 }	
 ?>
 </td></tr>
