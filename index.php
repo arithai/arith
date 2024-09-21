@@ -322,8 +322,10 @@ print $title;
 </title>
 </head>
 <body background=<?php print $udir."/back0.gif" ?>
-<a href=https://youtu.be/k1HZZykRExs>最新資訊2024.05.19[</a><?php echo $_SERVER['SERVER_NAME']; ?>][
-<?php echo $_SERVER['HTTP_HOST']; ?>]
+<a href=https://youtu.be/k1HZZykRExs>最新資訊2024.09.21[</a><?php echo $_SERVER['SERVER_NAME']; ?>][
+<?php echo $_SERVER['HTTP_HOST']; 
+if( isset( $_SERVER['REQUEST_URI'] ) ) echo "<<".$_SERVER['REQUEST_URI'].">>"; 
+?>]
 
 <div id="sfcs5julx2kdxaf3xay4t9kwy8zj2se7yl7"></div> 
 <script type="text/javascript" src="https://counter8.optistats.ovh/private/counter.js?c=s5julx2kdxaf3xay4t9kwy8zj2se7yl7&down=async" async>
@@ -334,7 +336,8 @@ print $title;
 
 <?php
 print $description;
-?>,<a href=#>房屋出租</a>,<a href=#>房屋出售</a><br><!--樹網(tree net) ---  description 可變!   ---->
+?>,<a href=https://www.youtube.com/@arithai>植物影音</a>,
+<a href=https://www.youtube.com/@arithai/shorts>短片</a><br><!--樹網(tree net) ---  description 可變!   ---->
 <hr> 
 <?php
 function upload_back() { 
