@@ -322,7 +322,7 @@ print $title;
 </title>
 </head>
 <body background=<?php print $udir."/back0.gif" ?>
-<a href=https://youtu.be/k1HZZykRExs>最新資訊2024.09.21[</a><?php echo $_SERVER['SERVER_NAME']; ?>][
+<a href=https://youtu.be/k1HZZykRExs>最新資訊2024.10.03 Peace Sandoricum koetjape  [</a><?php echo $_SERVER['SERVER_NAME']; ?>][
 <?php echo $_SERVER['HTTP_HOST']; 
 if( isset( $_SERVER['REQUEST_URI'] ) ) echo "<<".$_SERVER['REQUEST_URI'].">>"; 
 ?>]
