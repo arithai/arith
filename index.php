@@ -321,11 +321,18 @@ print $title;
 ?>,arithai.com,2024
 </title>
 </head>
-<body background=<?php print $udir."/back0.gif" ?>
-<a href=https://youtu.be/k1HZZykRExs>最新資訊,2024.11.19 Peace Sandoricum koetjape  [</a><?php echo $_SERVER['SERVER_NAME']; ?>][
-<?php echo $_SERVER['HTTP_HOST']; 
-if( isset( $_SERVER['REQUEST_URI'] ) ) echo "<<".$_SERVER['REQUEST_URI'].">>"; 
-?>]
+<body background=<?php print $udir."/back0.gif" ?>>
+<a href=https://youtu.be/k1HZZykRExs>最新資訊,2024.11.20</a>
+[<a href=
+http://<?php 
+if( isset( $_SERVER['SERVER_NAME'] ) && !empty( $_SERVER['SERVER_NAME'] )
+)  echo $_SERVER['SERVER_NAME']; 
+if( isset( $_SERVER['HTTP_HOST'] )   && !empty( $_SERVER['HTTP_HOST'] )
+   && $_SERVER['HTTP_HOST']!=$_SERVER['SERVER_NAME']
+)  echo $_SERVER['HTTP_HOST'];
+if( isset( $_SERVER['REQUEST_URI'] ) && !empty( $_SERVER['REQUEST_URI'] )
+ ) echo $_SERVER['REQUEST_URI']; 
+?>>HOME</a>]
 
 <div id="sfcs5julx2kdxaf3xay4t9kwy8zj2se7yl7"></div> 
 <script type="text/javascript" src="https://counter8.optistats.ovh/private/counter.js?c=s5julx2kdxaf3xay4t9kwy8zj2se7yl7&down=async" async>
