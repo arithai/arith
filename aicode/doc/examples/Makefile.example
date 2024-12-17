@@ -24,6 +24,7 @@ EXAMPLES=\
                 decode_audio                       \
                 decode_filter_audio                \
                 decode_filter_video                \
+                dfvmux                             \
                 deremux                            \
                 decode_video                       \
                 demux_decode                       \
