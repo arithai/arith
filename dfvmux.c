@@ -42,10 +42,10 @@
 //const char *filter_descr = "scale=1280:720";
 //const char *filter_descr = "scale=32:32";
 //const char *filter_descr = "scale=iw:ih";
-//#define GLOBAL_WIDTH  640*3
-//#define GLOBAL_HEIGHT 360*3
-#define GLOBAL_WIDTH  360*3
-#define GLOBAL_HEIGHT 640*3
+#define GLOBAL_WIDTH  640*3
+#define GLOBAL_HEIGHT 360*3
+//#define GLOBAL_WIDTH  360*3
+//#define GLOBAL_HEIGHT 640*3
 char filter_descr[sizeof("scale=3840:2160,transpose=clock")];
 /* other way:
    scale=78:24 [scl]; [scl] transpose=cclock // assumes "[in]" and "[out]" to be input output pads respectively
