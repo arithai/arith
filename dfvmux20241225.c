@@ -42,89 +42,10 @@
 //const char *filter_descr = "scale=1280:720";
 //const char *filter_descr = "scale=32:32";
 //const char *filter_descr = "scale=iw:ih";
-#define GLOBAL_WIDTH  640*6
-#define GLOBAL_HEIGHT 360*6
+#define GLOBAL_WIDTH  640*3
+#define GLOBAL_HEIGHT 360*3
 //#define GLOBAL_WIDTH  360*3
 //#define GLOBAL_HEIGHT 640*3
-
-typedef struct STPONT {
-  unsigned short x;  //0..3840-1
-  unsigned short y;  //0..2160-1
-  unsigned short nr; //0..65535
-  int w;
-} ST_POINT;
-typedef struct STPONTLIST {
-  ST_POINT pt;
-  struct STPONTLIST *next;
-} ST_POINT_LIST;
-ST_POINT_LIST *ptHead=NULL,*ptTail=NULL;
-void ptSet(unsigned short x,unsigned short y,int weight) {
-//printf("%s(%d)\n",__FILE__,__LINE__);  
-  ST_POINT_LIST *ptList,*ptListNext,*ptListTemp;
-  ptListNext=(ST_POINT_LIST *)malloc(sizeof(ST_POINT_LIST));
-  ptListNext->pt.x=x;
-  ptListNext->pt.y=y;
-  ptListNext->pt.w=weight;
-  if(ptHead==NULL) {
-     ptHead=ptListNext;
-     ptTail=ptListNext;
-     ptHead->next=NULL;
-     return;
-  }
-//printf("%s(%d)\n",__FILE__,__LINE__);  
-  ptList=ptHead;
-  while(ptList!=NULL && ptList->pt.w>=weight) { //>=ºÙ¥ý¨ì¥ýÄ¹   8,7,7,5
-//  printf("%s(%d)\n",__FILE__,__LINE__);  
-    if(ptList->next!=NULL) {
-      if(ptList->next->pt.w<weight) break;
-    }
-    ptList = ptList->next;
-  }
-//printf("%s(%d) %X %X\n",__FILE__,__LINE__,ptHead,ptList);  
-  if(ptList==ptHead) {    //insert in Head
-    ptListNext->next=ptHead;
-    ptHead=ptListNext;
-//  printf("%s(%d) head %X %X\n",__FILE__,__LINE__,ptHead,ptList);  
-  }
-  else if(ptList==NULL) { //insert in Tail
-    ptTail->next=ptListNext;
-    ptListNext->next=NULL;
-    ptTail=ptListNext;
-//  printf("%s(%d) tail %X %X\n",__FILE__,__LINE__,ptHead,ptList);  
-  }
-  else {                  //insert in middle 
-    ptListTemp=ptList->next;
-    ptList->next=ptListNext;
-    ptListNext->next=ptListTemp;
-//  printf("%s(%d) middle %X %X\n",__FILE__,__LINE__,ptHead,ptList);  
-  }  
-}
-void ptFree() {
-  ST_POINT_LIST *ptList,*ptListTemp;
-  ptList=ptHead;
-  while(ptList!=NULL) { 
-    ptListTemp=ptList->next;
-    free(ptList);
-    ptList=ptListTemp;
-  }
-  ptHead=NULL;
-  ptTail=NULL;
-}
-void ptList() {
-  ST_POINT_LIST *ptList,*ptListTemp;
-  int x30,y30;
-  ptList=ptHead;
-  while(ptList!=NULL) { 
-    if(ptList->pt.w>380000) {
-      x30=ptList->pt.x;y30=ptList->pt.y;
-      printf("(%4d,%4d,%7d)\n",x30*64*2,y30*36*2,ptList->pt.w);
-    }    
-    ptListTemp=ptList->next;
-    ptList=ptListTemp;
-  }
-  ptHead=NULL;
-  ptTail=NULL;
-}
 char filter_descr[sizeof("scale=3840:2160,transpose=clock")];
 /* other way:
    scale=78:24 [scl]; [scl] transpose=cclock // assumes "[in]" and "[out]" to be input output pads respectively
@@ -265,12 +186,8 @@ static void add_stream(OutputStream *ost, AVFormatContext *oc,
         #if 1
 //      c->width    = GLOBAL_HEIGHT;   //2160; //352;
 //      c->height   = GLOBAL_WIDTH;    //3840; //288;
-
-//      c->width    = GLOBAL_WIDTH;    //2160; //352;
-//      c->height   = GLOBAL_HEIGHT;   //3840; //288;
-
-        c->width    = dec_ctx->width;    //2160; //352;
-        c->height   = dec_ctx->height;   //3840; //288;
+        c->width    = GLOBAL_WIDTH;    //2160; //352;
+        c->height   = GLOBAL_HEIGHT;   //3840; //288;
         #else
         c->width    = 352;
         c->height   = 288;
@@ -498,53 +415,9 @@ static void open_video(AVFormatContext *oc, const AVCodec *codec,
         fprintf(stderr, "Could not copy the stream parameters\n");
         exit(1);
     }
-} 
-AVFrame *filt_frame;
-int HXYV[60][60];
-int HXYY[30][30];
-int HXYU[30][30];
-void calc_64x36(AVFrame *pict, int frame_index,
-                int width, int height) { //60x60
-  int x,y,x30,y30,x60,y60; 
-  ptFree();    
-  memset(HXYY,0,sizeof(HXYY));
-  memset(HXYU,0,sizeof(HXYU));
-  memset(HXYV,0,sizeof(HXYV));
-  for(y30=0;y30<30;y30++) {
-    for(x30=0;x30<30;x30++) {
-      if(HXYV[x30][y30]>0) 
-        printf("====(%4d,%4d,%7d,%7d,%7d)\n",x30*64*2,y30*36*2,HXYY[x30*2][y30*2],HXYU[x30][y30],HXYV[x30][y30]);    
-    }
-  }  
-  for (y = 0; y < height; y++) {
-    y60=y/36; 
-    for (x = 0; x < width; x++) {
-      x60=x/64;  
-      HXYY[x60][y60]+=filt_frame->data[0][y * filt_frame->linesize[0] + x];  
-    }
-  }      
-  for (y = 0; y < height/2; y++) {
-    y30=y/36; 
-    for (x = 0; x < width/2; x++) {
-      x30=x/64;  
-      HXYU[x30][y30]+=filt_frame->data[1][y * filt_frame->linesize[1] + x];  
-      HXYV[x30][y30]+=filt_frame->data[2][y * filt_frame->linesize[2] + x];  
-    }
-  }  
-  for(y30=0;y30<30;y30++) {
-    for(x30=0;x30<30;x30++) {
-//    printf("%s(%d)\n",__FILE__,__LINE__);         
-      ptSet((unsigned short) x30,(unsigned short) y30,HXYV[x30][y30]);
-      if(HXYV[x30][y30]>380000) 
-        printf("(%4d,%4d,%7d,%7d,%7d)\n",x30*64*2,y30*36*2,HXYY[x30*2][y30*2],HXYU[x30][y30],HXYV[x30][y30]);
-    }
-  }
-  ptList();
-  printf("calc_64x36 (%d,%d) end\n",width,height);
-  return;
 }
+AVFrame *filt_frame;
 int Xmax,Xleft,Xright,Ymax,Yup,Ydown;
-#define MAXNR_PT 64
 //int HX[GLOBAL_WIDTH],HY[GLOBAL_HEIGHT];
 int HX[GLOBAL_HEIGHT/2],HY[GLOBAL_WIDTH/2];
 static void calc_histogram(AVFrame *pict, int frame_index,
@@ -602,7 +475,6 @@ static void fill_yuv_image(AVFrame *pict, int frame_index,
                            int width, int height)
 {
     int x, y, i;
-    int x30,y30; 
     int Xmid=(Xleft+Xright)/2;
     int Ymid=(Yup+Ydown)/2;
     i = frame_index;
@@ -625,43 +497,23 @@ static void fill_yuv_image(AVFrame *pict, int frame_index,
 #endif
 #if 1
     for (y = 0; y < height; y++)
-      y30=y/36;
       for (x = 0; x < width; x++) {
-         x30=x/64; 
-         #if 0
 //       if(x>Xmax-10&&x<Xmax+10&&y>Ymax-10&&y<Ymax+10) {
          if(x>Xmid-10&&x<Xmid+10&&y>Ymid-10&&y<Ymid+10) {
            pict->data[0][y * pict->linesize[0] + x] = 0x0;
          }
-         #endif
-         #if 1
-         printf("%s(%d)%X\n",__FILE__,__LINE__,ptHead);
-         if(HXYV[x30/2][y30/2]>=ptHead->pt.w) {
-           pict->data[0][y * pict->linesize[0] + x] = 0x0;
-         }
-         #endif  
          else {
            pict->data[0][y * pict->linesize[0] + x] = filt_frame->data[0][y * filt_frame->linesize[0] + x];
          }  
       }    
     /* Cb and Cr */
     for (y = 0; y < height/2; y++) {
-       y30=y/36;
-       for (x = 0; x < width/2; x++) { 
-         x30=x/64; 
-         #if 0
+       for (x = 0; x < width/2; x++) {  
 //       if(x>Xmax/2-10&&x<Xmax/2+10&&y>Ymax/2-10&&y<Ymax/2+10) {
          if(x>Xmid/2-10&&x<Xmid/2+10&&y>Ymid/2-10&&y<Ymid/2+10) {
               pict->data[1][y * pict->linesize[1] + x] = 0xFF;
               pict->data[2][y * pict->linesize[2] + x] = 0x0;
           }
-         #endif  
-         #if 1
-         if(HXYV[x30][y30]>=ptHead->pt.w) {
-              pict->data[1][y * pict->linesize[1] + x] = 0xFF;
-              pict->data[2][y * pict->linesize[2] + x] = 0x0;
-          }
-         #endif  
           else {
               pict->data[1][y * pict->linesize[1] + x] = filt_frame->data[1][y * filt_frame->linesize[1] + x];
               pict->data[2][y * pict->linesize[2] + x] = filt_frame->data[2][y * filt_frame->linesize[2] + x];
@@ -730,7 +582,6 @@ static AVFrame *get_video_frame(OutputStream *ost)
     } else {
         printf("(%d,%d)\n",c->width, c->height);
         calc_histogram(ost->frame, ost->next_pts, c->width, c->height);
-        calc_64x36(ost->frame, ost->next_pts, c->width, c->height);
         fill_yuv_image(ost->frame, ost->next_pts, c->width, c->height);
     }
     ost->frame->pts = ost->next_pts++;
@@ -823,8 +674,6 @@ static int init_filters(const char *filters_descr)
         av_log(NULL, AV_LOG_ERROR, "Cannot create buffer sink\n");
         goto end;
     }
-//  ret = av_opt_set_int_list(buffersink_ctx, "pix_fmts", pix_fmts,
-//                            AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
     ret = av_opt_set_int_list(buffersink_ctx, "pix_fmts", pix_fmts,
                               AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
     if (ret < 0) {
@@ -934,27 +783,8 @@ int main(int argc, char **argv)
     int have_video = 0, have_audio = 0;
     int encode_video = 0, encode_audio = 0;
     AVDictionary *opt = NULL;
-    int i;    
-//mux end
-
-    frame = av_frame_alloc();
-    filt_frame = av_frame_alloc();
-    packet = av_packet_alloc();
-    if (!frame || !filt_frame || !packet) {
-        fprintf(stderr, "Could not allocate frame or packet\n");
-        exit(1);
-    }
-    if ((ret = open_input_file(argv[1])) < 0)
-        goto end;
-//  sprintf(filter_descr,"scale=%d:%d,transpose=clock",GLOBAL_WIDTH,GLOBAL_HEIGHT);
-//  sprintf(filter_descr,"scale=%d:%d",GLOBAL_WIDTH,GLOBAL_HEIGHT);
-    sprintf(filter_descr,"scale=iw:ih");
-    if ((ret = init_filters(filter_descr)) < 0)
-        goto end;
-    printf("video_size=%dx%d:pix_fmt=%d:pixel_aspect=%d/%d\n",
-            dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt,
-            dec_ctx->sample_aspect_ratio.num, dec_ctx->sample_aspect_ratio.den);
-//mux begin    
+    int i;
+    
         if (argc < 3) {
         printf("usage: %s input_file output_file looptime flag\n"
                "API example program to output a media file with libavformat.\n"
@@ -1067,7 +897,20 @@ int main(int argc, char **argv)
 
 
 //mux end
+    frame = av_frame_alloc();
+    filt_frame = av_frame_alloc();
+    packet = av_packet_alloc();
+    if (!frame || !filt_frame || !packet) {
+        fprintf(stderr, "Could not allocate frame or packet\n");
+        exit(1);
+    }
+    if ((ret = open_input_file(argv[1])) < 0)
+        goto end;
 
+//  sprintf(filter_descr,"scale=%d:%d,transpose=clock",GLOBAL_WIDTH,GLOBAL_HEIGHT);
+    sprintf(filter_descr,"scale=%d:%d",GLOBAL_WIDTH,GLOBAL_HEIGHT);
+    if ((ret = init_filters(filter_descr)) < 0)
+        goto end;
     /* read all packets */
     while (1) {
         if ((ret = av_read_frame(fmt_ctx, packet)) < 0)
@@ -1106,7 +949,7 @@ int main(int argc, char **argv)
                       (!encode_audio || av_compare_ts(video_st.next_pts, video_st.enc->time_base,
                         audio_st.next_pts, audio_st.enc->time_base) <= 0)) {
                         encode_video = !write_video_frame(oc, &video_st);
-                    //  encode_audio = !write_audio_frame(oc, &audio_st);
+                        encode_audio = !write_audio_frame(oc, &audio_st);
                     //  printf("line %d\n",__LINE__);
                     } else {
                         encode_audio = !write_audio_frame(oc, &audio_st);
