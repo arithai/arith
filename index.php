@@ -185,7 +185,7 @@
 <meta http-equiv='expires' content='-1'>
 <script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9319053728780195\"
      crossorigin=\"anonymous\"></script>
-<title>".$IDT[$IDii].",arithai.com,2024
+<title>".$IDT[$IDii].",arithai.com,2025
 </title>
 </head>
 <body background=".$udira."/back0.gif>".$_SERVER['SERVER_NAME']."<table cellspacing=0 cellpadding=0 width='100%' height='100%' border=0>
@@ -210,11 +210,7 @@ else
       $fdata.="<script type='text/javascript' src='http://js1.bloggerads.net/showbanner.aspx?blogid=20120109000042&amp;charset=utf-8'></script>";
 }
       $fdata.="
-<!-- Counter Code START --><a href='http://www.e-zeeinternet.com/' target='_blank'>
-<img src='http://www.e-zeeinternet.com/count.php?page=1081173&amp;style=default&amp;nbdigits=5' alt='HTML Hit Counter' border='0' />
-</a><a href='http://www.e-zeeinternet.com/' title='HTML Hit Counter' target='_blank' 
-style='font-family: Geneva, Arial, Helvetica, sans-serif; font-size: 10px; color: #000000; text-decoration: none;'>HTML Hit Counter
-</a><!-- Counter Code END --><img src=a5.gif alt='Guest Book' border=0>
+<img src=a5.gif alt='Guest Book' border=0>
 <a href='/page/guestbook.php'>-討論區<font size=+3>GuestBook</a></a><br>"
 ;
 
@@ -253,12 +249,6 @@ else
 }
 
       $fdata.="
-<!-- Counter Code START --><a href='http://www.e-zeeinternet.com/' target='_blank'>
-<img src='http://www.e-zeeinternet.com/count.php?page=1154517&style=default&nbdigits=5&reloads=1' alt='Free Counter' border='0' >
-</a><br><a href='http://www.e-zeeinternet.com/' title='Free Counter' target='_blank' 
-style='font-family: Geneva, Arial, Helvetica, sans-serif; font-size: 10px; color: #000000; text-decoration: none;'>
-Free Counter</a><!-- Counter Code END -->
-&nbsp;
 <img src=a5.gif alt='Guest Book' border=0>
 <a href='/page/guestbook.php'>-討論區GuestBook</a><br>"
 ;
@@ -320,11 +310,11 @@ Free Counter</a><!-- Counter Code END -->
 <title>
 <?php
 print $title;
-?>,arithai.com,2024
+?>,arithai.com,2025
 </title>
 </head>
 <body background=<?php print $udir."/back0.gif" ?>>
-<a href=https://youtu.be/k1HZZykRExs>最新資訊,2024.12.29</a>
+最新資訊,2025.01.08&nbsp;&nbsp;
 [<a href=
 http://<?php 
 if( isset( $_SERVER['SERVER_NAME'] ) && !empty( $_SERVER['SERVER_NAME'] )
@@ -335,11 +325,6 @@ if( isset( $_SERVER['HTTP_HOST'] )   && !empty( $_SERVER['HTTP_HOST'] )
 if( isset( $_SERVER['REQUEST_URI'] ) && !empty( $_SERVER['REQUEST_URI'] )
  ) echo $_SERVER['REQUEST_URI']; 
 ?>>HOME</a>]
-
-<div id="sfcs5julx2kdxaf3xay4t9kwy8zj2se7yl7"></div> 
-<script type="text/javascript" src="https://counter8.optistats.ovh/private/counter.js?c=s5julx2kdxaf3xay4t9kwy8zj2se7yl7&down=async" async>
-</script> 
-
 <table cellspacing=0 cellpadding=0 width='100%' height='100%' border=0>
 <td colspan=2 align=center bgcolor=#AAFFFF><font size=+2>
 
