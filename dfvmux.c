@@ -36,6 +36,33 @@
 #include <libavfilter/buffersrc.h>
 #include <libavutil/opt.h>
 //dfvmux.c ArithAI Yang 2024.12.16
+
+#define CLIP(X) ( (X) > 255 ? 255 : (X) < 0 ? 0 : X)
+
+// RGB -> YUV
+#define RGB2Y(R, G, B) CLIP(( (  66 * (R) + 129 * (G) +  25 * (B) + 128) >> 8) +  16)
+#define RGB2U(R, G, B) CLIP(( ( -38 * (R) -  74 * (G) + 112 * (B) + 128) >> 8) + 128)
+#define RGB2V(R, G, B) CLIP(( ( 112 * (R) -  94 * (G) -  18 * (B) + 128) >> 8) + 128)
+
+// YUV -> RGB
+#define C(Y) ( (Y) - 16  )
+#define D(U) ( (U) - 128 )
+#define E(V) ( (V) - 128 )
+
+#define YUV2R(Y, U, V) CLIP(( 298 * C(Y)              + 409 * E(V) + 128) >> 8)
+#define YUV2G(Y, U, V) CLIP(( 298 * C(Y) - 100 * D(U) - 208 * E(V) + 128) >> 8)
+#define YUV2B(Y, U, V) CLIP(( 298 * C(Y) + 516 * D(U)              + 128) >> 8)
+
+// RGB -> YCbCr
+#define CRGB2Y(R, G, B) CLIP((19595 * R + 38470 * G + 7471 * B ) >> 16)
+#define CRGB2Cb(R, G, B) CLIP((36962 * (B - CLIP((19595 * R + 38470 * G + 7471 * B ) >> 16) ) >> 16) + 128)
+#define CRGB2Cr(R, G, B) CLIP((46727 * (R - CLIP((19595 * R + 38470 * G + 7471 * B ) >> 16) ) >> 16) + 128)
+
+// YCbCr -> RGB
+#define CYCbCr2R(Y, Cb, Cr) CLIP( Y + ( 91881 * Cr >> 16 ) - 179 )
+#define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
+#define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
+
 //const char *filter_descr = "scale=80:80,transpose=cclock";
 //const char *filter_descr = "scale=32:108,transpose=cclock";
 //const char *filter_descr = "scale=32:112,transpose=cclock";
@@ -47,7 +74,7 @@
 //#define GLOBAL_WIDTH  360*3
 //#define GLOBAL_HEIGHT 640*3
 
-typedef struct STPONT {
+typedef struct STPOINT {
   unsigned short x;  //0..3840-1
   unsigned short y;  //0..2160-1
   unsigned short nr; //0..65535
@@ -110,20 +137,41 @@ void ptFree() {
   ptHead=NULL;
   ptTail=NULL;
 }
-void ptList() {
+void ptListAll() {
   ST_POINT_LIST *ptList,*ptListTemp;
   int x30,y30;
   ptList=ptHead;
-  while(ptList!=NULL) { 
-    if(ptList->pt.w>380000) {
+  while(ptList!=NULL) { //
+    if(ptList->pt.w>104159) 
+    {
       x30=ptList->pt.x;y30=ptList->pt.y;
-      printf("(%4d,%4d,%7d)\n",x30*64*2,y30*36*2,ptList->pt.w);
+      x30=x30;y30=y30;
+//    printf("%s(%d) (%4d,%4d,%7d)\n",__FILE__,__LINE__,x30,y30,ptList->pt.w);
     }    
     ptListTemp=ptList->next;
     ptList=ptListTemp;
   }
-  ptHead=NULL;
-  ptTail=NULL;
+}
+#define maxFirst 32
+ST_POINT_LIST *ptFirst;
+void ptGetFirst() {
+  ST_POINT_LIST *ptList,*ptListTemp;
+  int x30,y30;
+  int i=0;
+  ptList=ptHead;
+  while(ptList!=NULL && i<maxFirst) { 
+//  printf("%s(%d) %lX,%d\n",__FILE__,__LINE__,(long)ptList,i);
+    if(ptList->pt.w>380000) {
+      x30=ptList->pt.x;y30=ptList->pt.y;
+      x30=x30;y30=y30;
+//    printf("(%4d,%4d,%7d)\n",x30,y30,ptList->pt.w);
+    }    
+    i++;    
+    ptListTemp=ptList->next;
+    ptList=ptListTemp;
+  }
+  ptFirst=ptList;
+//printf("%s(%d) %lX\n",__FILE__,__LINE__,(long)ptFirst);
 }
 char filter_descr[sizeof("scale=3840:2160,transpose=clock")];
 /* other way:
@@ -135,7 +183,7 @@ AVFilterContext *buffersink_ctx;
 AVFilterContext *buffersrc_ctx;
 AVFilterGraph *filter_graph;
 static int video_stream_index = -1;
-static int64_t last_pts = AV_NOPTS_VALUE;
+//static int64_t last_pts = AV_NOPTS_VALUE;
 //mux begin/////////////////////////////////////////////////////////////////////
 #include <string.h>
 #include <math.h>
@@ -169,11 +217,15 @@ typedef struct OutputStream {
 static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt)
 {
     AVRational *time_base = &fmt_ctx->streams[pkt->stream_index]->time_base;
+#if 0    
     printf("pts:%s pts_time:%s dts:%s dts_time:%s duration:%s duration_time:%s stream_index:%d\n",
            av_ts2str(pkt->pts), av_ts2timestr(pkt->pts, time_base),
            av_ts2str(pkt->dts), av_ts2timestr(pkt->dts, time_base),
            av_ts2str(pkt->duration), av_ts2timestr(pkt->duration, time_base),
            pkt->stream_index);
+#else
+  time_base = time_base;           
+#endif           
 }
 static int write_frame(AVFormatContext *fmt_ctx, AVCodecContext *c,
                        AVStream *st, AVFrame *frame, AVPacket *pkt)
@@ -500,47 +552,633 @@ static void open_video(AVFormatContext *oc, const AVCodec *codec,
     }
 } 
 AVFrame *filt_frame;
+#include <stdbool.h>
+#define MAX_JUMP 2
+bool marginal(x,y) {
+  int diff;
+  if(x>0 && y>0) { //v change!
+    diff=abs(
+       filt_frame->data[2][(y-1) * filt_frame->linesize[2] + x    ]+
+       filt_frame->data[2][     y* filt_frame->linesize[2] + (x-1)]-
+     2*filt_frame->data[2][     y* filt_frame->linesize[2] + x    ]);
+//  printf("%s(%d) diff=%d\n",__FILE__,__LINE__,diff);
+    if(diff > MAX_JUMP) 
+     return true;  
+  } 
+  return false;
+}
 int HXYV[60][60];
 int HXYY[30][30];
 int HXYU[30][30];
+int EX[3840];
+int EY[3840];
 void calc_64x36(AVFrame *pict, int frame_index,
                 int width, int height) { //60x60
-  int x,y,x30,y30,x60,y60; 
+  int x,y,x30,y30,x60,y60;
+  int xs60,ys60;  
   ptFree();    
   memset(HXYY,0,sizeof(HXYY));
   memset(HXYU,0,sizeof(HXYU));
   memset(HXYV,0,sizeof(HXYV));
+  memset(EX,  0,sizeof(EX));
+  memset(EY,  0,sizeof(EY));
+  xs60=width/60;
+  ys60=height/60;
+#if 0  
   for(y30=0;y30<30;y30++) {
     for(x30=0;x30<30;x30++) {
       if(HXYV[x30][y30]>0) 
         printf("====(%4d,%4d,%7d,%7d,%7d)\n",x30*64*2,y30*36*2,HXYY[x30*2][y30*2],HXYU[x30][y30],HXYV[x30][y30]);    
     }
   }  
+#endif  
   for (y = 0; y < height; y++) {
-    y60=y/36; 
+    y60=y/ys60; 
     for (x = 0; x < width; x++) {
-      x60=x/64;  
-      HXYY[x60][y60]+=filt_frame->data[0][y * filt_frame->linesize[0] + x];  
+      x60=x/xs60;  
+      HXYY[x60][y60]+=filt_frame->data[0][y * filt_frame->linesize[0] + x];
     }
   }      
   for (y = 0; y < height/2; y++) {
-    y30=y/36; 
+    y30=y/ys60; 
     for (x = 0; x < width/2; x++) {
-      x30=x/64;  
+      x30=x/xs60;  
       HXYU[x30][y30]+=filt_frame->data[1][y * filt_frame->linesize[1] + x];  
       HXYV[x30][y30]+=filt_frame->data[2][y * filt_frame->linesize[2] + x];  
+      if(marginal(x/2,y/2)) {
+        EX[x]++;;
+        EY[y]++;;
+      }
     }
   }  
   for(y30=0;y30<30;y30++) {
     for(x30=0;x30<30;x30++) {
 //    printf("%s(%d)\n",__FILE__,__LINE__);         
       ptSet((unsigned short) x30,(unsigned short) y30,HXYV[x30][y30]);
+      #if 0
       if(HXYV[x30][y30]>380000) 
         printf("(%4d,%4d,%7d,%7d,%7d)\n",x30*64*2,y30*36*2,HXYY[x30*2][y30*2],HXYU[x30][y30],HXYV[x30][y30]);
+      #endif  
     }
   }
-  ptList();
-  printf("calc_64x36 (%d,%d) end\n",width,height);
+  ptListAll();
+  printf("calc_64x36 (%d,%d) %lX end\n",width,height,(long)ptHead);
+  return;
+}
+//娩絫,,狠翴,癬翴,沧翴
+#define edgeSpace      1               //オ娩絫ぃ衡
+#define maxDeltaSpace  1               //程ぃ琌絬フ
+#define minPointNrLine 6               //程ぶ絬翴计
+typedef struct STLINE {
+  short c0;  //0..3840-1 =coordinate
+  short c1;  //0..65535
+  int w;     //翴计
+} ST_LINE;
+typedef struct STLINELIST {
+  ST_LINE L;
+  struct STLINELIST *next;
+} ST_LINE_LIST;
+ST_LINE_LIST *lnHead=NULL;
+void initLineList(int width,int height) {
+  int i;
+  ST_LINE_LIST *lnList,*lnListNext;
+  lnListNext=(ST_LINE_LIST *)malloc(sizeof(ST_LINE_LIST));
+  lnListNext->L.c0=0;
+  lnListNext->L.c1=0;
+  lnListNext->L.w=0;
+  lnHead=lnListNext;
+  lnList=lnHead;
+  for(i=edgeSpace+1;i<width/2-edgeSpace-2;i++) {
+    lnListNext=(ST_LINE_LIST *)malloc(sizeof(ST_LINE_LIST));
+    lnListNext->L.c0=0;
+    lnListNext->L.c1=0;
+    lnListNext->L.w=0;
+    lnList->next=lnListNext;
+    lnList=lnListNext;
+  }
+  lnList->next=NULL;
+}
+void freeLineList() {
+  ST_LINE_LIST *lnList,*lnListNext;
+  if(lnHead!=NULL) {
+    lnList=lnHead;
+    while(lnList->next!=NULL) {
+      lnListNext=lnList->next;
+      free(lnList);
+      lnList=lnListNext;
+    }
+    free(lnList);
+  }
+  lnHead=NULL;
+}
+#define MAX_JUMP_LINE 3
+bool marginalLine(int x,int y) {
+  int diff,i,x0,y0;
+  for (i=0;i<maxDeltaSpace;i++) {
+    x0=x-i;
+    y0=y-i;
+    if(x0>0 && y0>0) { //v change!
+      diff=abs(
+        filt_frame->data[2][(y0-1) * filt_frame->linesize[2] + x0    ]+
+        filt_frame->data[2][     y0* filt_frame->linesize[2] + (x0-1)]-
+      2*filt_frame->data[2][     y0* filt_frame->linesize[2] + x0    ]);
+    //printf("%s(%d) diff=%d\n",__FILE__,__LINE__,diff);
+      if(diff > MAX_JUMP_LINE) 
+       return true;  
+    }
+  }   
+  return false;
+}  
+
+//(x0,y0 ...x,y,... x1,y1)
+#define ratioS  4/3
+#define ratioT -4/3
+#define MAX_JUMP_SLOPE 5
+typedef struct STSLOPE { //Slope A,B
+  short y0;
+  short c0;  //0..3840-1 =coordinate
+  short c1;  //0..65535
+  int w;     //翴计
+} ST_SLOPE;
+typedef struct STSLOPELIST {
+  ST_SLOPE s;
+  struct STSLOPELIST *next;
+} ST_SLOPE_LIST;
+ST_SLOPE_LIST *slHead=NULL;
+void initSlopeList(int width,int height) {
+  int i;
+  ST_SLOPE_LIST *slList,*slListNext;
+  slListNext=(ST_SLOPE_LIST *)malloc(sizeof(ST_SLOPE_LIST));
+  slListNext->s.y0=0;
+  slListNext->s.c0=0;
+  slListNext->s.c1=0;
+  slListNext->s.w=0;
+  slHead=slListNext;
+  slList=slHead;
+  for(i=edgeSpace+1;i<width/2-edgeSpace-2;i++) {
+    slListNext=(ST_SLOPE_LIST *)malloc(sizeof(ST_SLOPE_LIST));
+    slListNext->s.y0=0;
+    slListNext->s.c0=0;
+    slListNext->s.c1=0;
+    slListNext->s.w=0;
+    slList->next=slListNext;
+    slList=slListNext;
+  }
+  slList->next=NULL;
+}
+void freeSlopeList() {
+  ST_SLOPE_LIST *slList,*slListNext;
+  if(slHead!=NULL) {
+    slList=slHead;
+    while(slList->next!=NULL) {
+      slListNext=slList->next;
+      free(slList);
+      slList=slListNext;
+    }
+    free(slList);
+  }
+  slHead=NULL;
+}
+bool marginalSlope(int x,int y) {
+  int diff,i;
+  for (i=0;i<maxDeltaSpace;i++) {
+    if(x>0 && y>0) { //v change!
+      diff=abs(
+        filt_frame->data[2][ (y-1) * filt_frame->linesize[2] + x    ]+
+        filt_frame->data[2][      y* filt_frame->linesize[2] + (x-1)]-
+      2*filt_frame->data[2][      y* filt_frame->linesize[2] + x    ]);
+    //printf("%s(%d) diff=%d\n",__FILE__,__LINE__,diff);
+      if(diff > MAX_JUMP_SLOPE) 
+       return true;  
+    }
+  }   
+  return false;
+}  
+//XYZST
+//Xfi X frame index
+//PQR R rect
+int wp,
+    Xfi,XposLine,Xc0,Xc1,Xw,
+    Yfi,YposLine,Yc0,Yc1,Yw,
+    Zfi,ZposLine,Zc0,Zc1,Zw,
+    Sfi,SposSlope,Sc0,Sc1,Sy0,Sw,
+    Tfi,TposSlope,Tc0,Tc1,Ty0,Tw
+    ;
+void FindXYZSTLineList(AVFrame *pict, int frame_index,
+                    int width, int height) { //60x60
+  int Y,U,V,R,G,B;
+  int c0,c1,w,countJump;
+  bool isStart;
+  ST_LINE_LIST *lnList,*lnListNext;
+  ST_SLOPE_LIST *slList,*slListNext;
+//x0,y0,t,x=x0+t,y=[y0+rt],t jump
+  int  x0,y0,x,y;
+  
+  c0=0;c1=0;    
+  c0=c0;c1=c1; 
+//Y     
+  lnListNext=lnHead;   
+  lnList=lnListNext;
+//printf("%s(%d)\n",__FILE__,__LINE__);
+  Yfi=frame_index;
+  Yw = 0;
+  for (y = edgeSpace+maxDeltaSpace; y < height/2-edgeSpace-1; y++) {
+    w = 0;
+    c0=0;c1=0;
+    isStart=true;
+    countJump=0;  
+    for (x = edgeSpace+maxDeltaSpace; x < width/2-edgeSpace-1; x++) {      
+#if 1      
+      Y =  filt_frame->data[0][y*2 * filt_frame->linesize[0] + x*2];
+      U =  filt_frame->data[1][y * filt_frame->linesize[1] + x];
+      V =  filt_frame->data[2][y * filt_frame->linesize[2] + x];
+      R = YUV2R(Y,U,V);
+      G = YUV2G(Y,U,V);
+      B = YUV2B(Y,U,V);
+//    printf("%s(%d) (%4d,%4d) yuv (%3d,%3d,%3d) rgb (%3d,%3d,%3d)\n",__FILE__,__LINE__,
+//           x,y,Y,U,V,R,G,B);
+//    if(x>410) exit(0);
+      R = R; G= G; B = B;       
+#endif        
+//    printf("%s(%d)fi=%3d,x=(%4d,%4d),ypos=%4d,(%d,%d),(%d,countJump=%d)\n",__FILE__,__LINE__,Yfi,x,y,YposLine,c0,c1,w,countJump);        
+      if(marginalLine(x,y)){
+        if(isStart) {
+          isStart=false;
+          w=1;
+          c0=x;
+//        printf("%s(%d) (%4d,%4d),%4d\n",__FILE__,__LINE__,x,y,c0);
+        }
+        else {
+          w++;
+        }  
+        countJump=1;
+        c1=x; //so End
+//      printf("%s(%d)fi=%3d,x=(%4d,%4d),ypos=%4d,(%d,%d),(%d,countJump=%d)\n",__FILE__,__LINE__,Yfi,x,y,YposLine,c0,c1,w,countJump);        
+      }
+      else {
+        if(isStart==false) { 
+          if(countJump) {
+            countJump++;
+//          printf("%s(%d) countJump=%4d",__FILE__,__LINE__,countJump);
+            if(countJump>maxDeltaSpace) {
+              if(w>Yw) {
+                Yw=w;
+                lnList->L.w=Yw;
+                YposLine=y;
+                Yc0=c0;
+                lnList->L.c0=Yc0;
+                Yc1=c1;
+                lnList->L.c1=Yc1;
+              }  
+              countJump=0;         
+              isStart=true;
+//            printf("%s(%d)fi=%3d,x=(%4d,%4d),ypos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Yfi,x,y,YposLine,Yc0,Yc1,w,Yw);        
+//            if(Yw>100) exit(0);
+            }            
+          }  
+        }
+      }
+    }
+    if(w>Yw) {
+      Yw=w;
+      lnList->L.w=Yw;
+      Yfi=frame_index;
+      YposLine=y;
+      Yc0=c0;
+      lnList->L.c0=Yc0;
+      Yc1=c1;
+      lnList->L.c1=Yc1;
+    }   
+    lnListNext=lnList->next;
+    if(lnListNext==NULL) break;
+    lnList=lnListNext;  
+  }  
+  printf("%s(%d)fi=%3d,y=%d,(%d,%d),%d\n",__FILE__,__LINE__,Yfi,YposLine,Yc0,Yc1,Yw);
+  
+  //X     
+  lnListNext=lnHead;   
+  lnList=lnListNext;
+//printf("%s(%d)\n",__FILE__,__LINE__);
+  Xfi=frame_index;
+  Xw = 0;
+  for (x = width/2-edgeSpace-1; x > edgeSpace+maxDeltaSpace; x--) {
+    w = 0;
+    c0=0;c1=0;
+    isStart=true;
+    countJump=0;  
+    for (y = edgeSpace+maxDeltaSpace; y < height/2-edgeSpace-1; y++) {      
+#if 1      
+      Y =  filt_frame->data[0][y*2 * filt_frame->linesize[0] + x*2];
+      U =  filt_frame->data[1][y * filt_frame->linesize[1] + x];
+      V =  filt_frame->data[2][y * filt_frame->linesize[2] + x];
+      R = YUV2R(Y,U,V);
+      G = YUV2G(Y,U,V);
+      B = YUV2B(Y,U,V);
+//    printf("%s(%d) (%4d,%4d) yuv (%3d,%3d,%3d) rgb (%3d,%3d,%3d)\n",__FILE__,__LINE__,
+//           x,y,Y,U,V,R,G,B);
+//    if(x>410) exit(0);
+      R = R; G= G; B = B;       
+#endif        
+//    printf("%s(%d)fi=%3d,x=(%4d,%4d),ypos=%4d,(%d,%d),(%d,countJump=%d)\n",__FILE__,__LINE__,Yfi,x,y,YposLine,c0,c1,w,countJump);        
+      if(marginalLine(x,y)){
+        if(isStart) {
+          isStart=false;
+          w=1;
+          c0=y;
+//        printf("%s(%d) (%4d,%4d),%4d\n",__FILE__,__LINE__,x,y,c0);
+        }
+        else {
+          w++;
+        }  
+        countJump=1;
+        c1=y; //so End
+//      printf("%s(%d)fi=%3d,x=(%4d,%4d),ypos=%4d,(%d,%d),(%d,countJump=%d)\n",__FILE__,__LINE__,Yfi,x,y,YposLine,c0,c1,w,countJump);        
+      }
+      else {
+        if(isStart==false) { 
+          if(countJump) {
+            countJump++;
+//          printf("%s(%d) countJump=%4d",__FILE__,__LINE__,countJump);
+            if(countJump>maxDeltaSpace) {
+              if(w>(Xw+2)) {
+                Xw=w;
+                lnList->L.w=Xw;
+                XposLine=x;
+                Xc0=c0;
+                lnList->L.c0=Xc0;
+                Xc1=c1;
+                lnList->L.c1=Xc1;
+              }  
+              countJump=0;         
+              isStart=true;
+//            printf("%s(%d)fi=%3d,x=(%4d,%4d),xpos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Xfi,x,y,XposLine,Xc0,Xc1,w,Xw);        
+//            if(Xw>100) exit(0);
+            }            
+          }  
+        }
+      }
+    }
+    if(w>(Xw+2)) {
+      Xw=w;
+      lnList->L.w=Xw;
+      Xfi=frame_index;
+      XposLine=x;
+      Xc0=c0;
+      lnList->L.c0=Xc0;
+      Xc1=c1;
+      lnList->L.c1=Xc1;
+    }   
+    lnListNext=lnList->next;
+    if(lnListNext==NULL) break;
+    lnList=lnListNext;  
+  }  
+  printf("%s(%d)fi=%3d,x=%d,(%d,%d),%d\n",__FILE__,__LINE__,Xfi,XposLine,Xc0,Xc1,Xw);  
+//if(Xw>100) exit(0);
+
+  //Z     
+  lnListNext=lnHead;   
+  lnList=lnListNext;
+//printf("%s(%d)\n",__FILE__,__LINE__);
+  Zfi=frame_index;
+  Zw = 0;
+  for (x = edgeSpace+maxDeltaSpace; x < width/2-edgeSpace-1; x++) {
+    w = 0;
+    c0=0;c1=0;
+    isStart=true;
+    countJump=0;  
+    for (y = edgeSpace+maxDeltaSpace; y < height/2-edgeSpace-1; y++) {      
+#if 1      
+      Y =  filt_frame->data[0][y*2 * filt_frame->linesize[0] + x*2];
+      U =  filt_frame->data[1][y * filt_frame->linesize[1] + x];
+      V =  filt_frame->data[2][y * filt_frame->linesize[2] + x];
+      R = YUV2R(Y,U,V);
+      G = YUV2G(Y,U,V);
+      B = YUV2B(Y,U,V);
+//    printf("%s(%d) (%4d,%4d) yuv (%3d,%3d,%3d) rgb (%3d,%3d,%3d)\n",__FILE__,__LINE__,
+//           x,y,Y,U,V,R,G,B);
+//    if(x>410) exit(0);
+      R = R; G= G; B = B;       
+#endif        
+//    printf("%s(%d)fi=%3d,x=(%4d,%4d),ypos=%4d,(%d,%d),(%d,countJump=%d)\n",__FILE__,__LINE__,Yfi,x,y,YposLine,c0,c1,w,countJump);        
+      if(marginalLine(x,y)){
+        if(isStart) {
+          isStart=false;
+          w=1;
+          c0=y;
+//        printf("%s(%d) (%4d,%4d),%4d\n",__FILE__,__LINE__,x,y,c0);
+        }
+        else {
+          w++;
+        }  
+        countJump=1;
+        c1=y; //so End
+//      printf("%s(%d)fi=%3d,x=(%4d,%4d),ypos=%4d,(%d,%d),(%d,countJump=%d)\n",__FILE__,__LINE__,Yfi,x,y,YposLine,c0,c1,w,countJump);        
+      }
+      else {
+        if(isStart==false) { 
+          if(countJump) {
+            countJump++;
+//          printf("%s(%d) countJump=%4d",__FILE__,__LINE__,countJump);
+            if(countJump>maxDeltaSpace) {
+              if(w>Zw) {
+                Zw=w;
+                lnList->L.w=Zw;
+                ZposLine=x;
+                Zc0=c0;
+                lnList->L.c0=Zc0;
+                Zc1=c1;
+                lnList->L.c1=Zc1;
+              }  
+              countJump=0;         
+              isStart=true;
+//            printf("%s(%d)fi=%3d,z=(%4d,%4d),zpos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Zfi,x,y,ZposLine,Zc0,Zc1,w,Zw);        
+//            if(Yw>100) exit(0);
+            }            
+          }  
+        }
+      }
+    }
+    if(w>Zw) {
+      Zw=w;
+      lnList->L.w=Zw;
+      Zfi=frame_index;
+      ZposLine=x;
+      Zc0=c0;
+      lnList->L.c0=Zc0;
+      Zc1=c1;
+      lnList->L.c1=Zc1;
+    }   
+    lnListNext=lnList->next;
+    if(lnListNext==NULL) break;
+    lnList=lnListNext;  
+  }  
+  printf("%s(%d)fi=%3d,z=%d,(%d,%d),%d\n",__FILE__,__LINE__,Xfi,ZposLine,Zc0,Zc1,Zw);  
+
+//S
+//int  x0,y0,x,y,x1,y1;
+  slList=slHead;
+  slListNext=slList;
+  Sfi=frame_index;
+  Sw = 0;
+  for (y0 = edgeSpace+maxDeltaSpace; y0 < height/2-edgeSpace-1; y0++) {
+    w = 0;
+    c0=0;c1=0;
+    isStart=true;
+    countJump=0;  
+    for (x0 = edgeSpace+maxDeltaSpace; x0 < width/2-edgeSpace-1; x0++) {
+//    printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+      x = x0;      
+      y = (int)(y0+x*ratioS);
+      if(y>height/2-edgeSpace-1) break;
+#if 1      
+      Y =  filt_frame->data[0][y*2 * filt_frame->linesize[0] + x*2];
+      U =  filt_frame->data[1][y * filt_frame->linesize[1] + x];
+      V =  filt_frame->data[2][y * filt_frame->linesize[2] + x];
+      R = YUV2R(Y,U,V);
+      G = YUV2G(Y,U,V);
+      B = YUV2B(Y,U,V);
+      R = R; G= G; B = B;       
+#endif    
+//    printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+      if(marginalSlope(x,y)){
+        if(isStart) {
+          isStart=false;
+          w=1;
+          c0=x;
+//        printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+        }
+        else {
+          w++;
+        }  
+        countJump=1;
+        c1=x; //so End
+//      printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+      }
+      else {
+        if(isStart==false) { 
+          if(countJump) {
+            countJump++;
+//          printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+            if(countJump>maxDeltaSpace) {
+              if(w>Sw) {
+                Sw=w;
+                slList->s.w=Sw;
+                SposSlope=y;
+                Sc0=c0;
+                slList->s.c0=Sc0;
+                Sc1=c1;
+                slList->s.c1=Sc1;
+                Sy0 = y0;
+              }  
+              countJump=0;         
+              isStart=true;
+//            printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+//            if(Sw>100) exit(0);
+            }            
+          }  
+        }
+      }
+    }
+    if(w>Sw) {
+      Sw=w;
+      slList->s.w=Sw;
+      Sfi=frame_index;
+      SposSlope=x;
+      Sc0=c0;
+      slList->s.c0=Sc0;
+      Sc1=c1;
+      slList->s.c1=Sc1;
+      Sy0 = y0;
+    }   
+    slListNext=slList->next;
+    if(slListNext==NULL) break;
+    slList=slListNext;  
+  }  
+  printf("%s(%d)fi=%3d,s=%d,(%d,%d,%d),%d\n",__FILE__,__LINE__,Sfi,SposSlope,Sc0,Sc1,Sy0,Sw);
+
+//T
+//int  x0,y0,x,y,x1,y1;
+  slList=slHead;
+  slListNext=slList;
+  Tfi=frame_index;
+  Tw = 0;
+  for (y0 = edgeSpace+maxDeltaSpace; y0 < height/2-edgeSpace-1; y0++) {
+    w = 0;
+    c0=0;c1=0;
+    isStart=true;
+    countJump=0;  
+    for (x0 = edgeSpace+maxDeltaSpace; x0 < width/2-edgeSpace-1; x0++) {
+//    printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+      x = x0;      
+      y = (int)(y0+x*ratioT);
+      if(y<edgeSpace+maxDeltaSpace) break;
+#if 1      
+      Y =  filt_frame->data[0][y*2 * filt_frame->linesize[0] + x*2];
+      U =  filt_frame->data[1][y * filt_frame->linesize[1] + x];
+      V =  filt_frame->data[2][y * filt_frame->linesize[2] + x];
+      R = YUV2R(Y,U,V);
+      G = YUV2G(Y,U,V);
+      B = YUV2B(Y,U,V);
+      R = R; G= G; B = B;       
+#endif    
+//    printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+      if(marginalSlope(x,y)){
+        if(isStart) {
+          isStart=false;
+          w=1;
+          c0=x;
+//        printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+        }
+        else {
+          w++;
+        }  
+        countJump=1;
+        c1=x; //so End
+//      printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+      }
+      else {
+        if(isStart==false) { 
+          if(countJump) {
+            countJump++;
+//          printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+            if(countJump>maxDeltaSpace) {
+              if(w>Sw) {
+                Tw=w;
+                slList->s.w=Tw;
+                TposSlope=y;
+                Tc0=c0;
+                slList->s.c0=Tc0;
+                Tc1=c1;
+                slList->s.c1=Tc1;
+                Ty0 = y0;
+              }  
+              countJump=0;         
+              isStart=true;
+//            printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+//            if(Sw>100) exit(0);
+            }            
+          }  
+        }
+      }
+    }
+    if(w>Tw) {
+      Tw=w;
+      slList->s.w=Tw;
+      Tfi=frame_index;
+      TposSlope=x;
+      Tc0=c0;
+      slList->s.c0=Tc0;
+      Tc1=c1;
+      slList->s.c1=Tc1;
+      Ty0 = y0;
+    }   
+    slListNext=slList->next;
+    if(slListNext==NULL) break;
+    slList=slListNext;  
+  }  
+  printf("%s(%d)fi=%3d,t=%d,(%d,%d,%d),%d\n",__FILE__,__LINE__,Tfi,TposSlope,Tc0,Tc1,Ty0,Tw);
+
+  printf("FindXYZSTLineList (%d,%d) %lX end\n",width,height,(long)ptHead);
   return;
 }
 int Xmax,Xleft,Xright,Ymax,Yup,Ydown;
@@ -597,19 +1235,27 @@ static void calc_histogram(AVFrame *pict, int frame_index,
     }
     Xright=2*x;
     printf("Xmax=(%d,%d,%d)%d\n",Xmax,Xleft,Xright,maxv);
-}/* Prepare a dummy image. */
+}
+/* Prepare a dummy image. */
 static void fill_yuv_image(AVFrame *pict, int frame_index,
                            int width, int height)
 {
     int x, y, i;
-    int x30,y30; 
+    int x0, y0;
+    int x30,y30,xs60,ys60;
+#if 0
     int Xmid=(Xleft+Xright)/2;
     int Ymid=(Yup+Ydown)/2;
-    i = frame_index;
+#endif    
+    xs60=width/60;
+    ys60=height/60;
+    i = frame_index; i = i;
     printf("h,w=(%d,%d),(%d,%d,%d),(%d,%d,%d)\n",height,width, 
              pict->linesize[0],pict->linesize[1],pict->linesize[2],
              filt_frame->linesize[0],filt_frame->linesize[1],filt_frame->linesize[2]
            );
+    ptGetFirst();       
+    printf("%s(%d) (%d,%d)\n",__FILE__,__LINE__,xs60,ys60);
 #if 0
     /* Y */
     for (y = 0; y < height; y++)
@@ -624,49 +1270,120 @@ static void fill_yuv_image(AVFrame *pict, int frame_index,
     }
 #endif
 #if 1
-    for (y = 0; y < height; y++)
-      y30=y/36;
+    for (x0 = Sc0; x0 < Sc1; x0++) {
+      y0=(int)(Sy0+x0*ratioS);
+      if(y0<height/2-edgeSpace-1) {
+//      printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,x0,y0);
+        filt_frame->data[0][2*y0 * filt_frame->linesize[0] + 2*x0] = 29;
+        filt_frame->data[0][2*y0 * filt_frame->linesize[0] + 2*x0] = 29;
+        filt_frame->data[0][(2*y0+1) * filt_frame->linesize[0] + 2*x0] = 29;
+        filt_frame->data[0][(2*y0+1) * filt_frame->linesize[0] + 2*x0+1] = 29;
+        pict->data[1][y0 * pict->linesize[1] + x0] = 255;
+        pict->data[2][y0 * pict->linesize[2] + x0] = 107;
+        filt_frame->data[1][y0 * filt_frame->linesize[1] + x0] = 255;
+        filt_frame->data[2][y0 * filt_frame->linesize[2] + x0] = 107;
+      }          
+      y0=(int)(Ty0+x0*ratioT);
+      if(y0>edgeSpace+maxDeltaSpace) {
+//      printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,x0,y0);
+        filt_frame->data[0][2*y0 * filt_frame->linesize[0] + 2*x0] = 29;
+        filt_frame->data[0][2*y0 * filt_frame->linesize[0] + 2*x0] = 29;
+        filt_frame->data[0][(2*y0+1) * filt_frame->linesize[0] + 2*x0] = 29;
+        filt_frame->data[0][(2*y0+1) * filt_frame->linesize[0] + 2*x0+1] = 29;
+        pict->data[1][y0 * pict->linesize[1] + x0] = 255;
+        pict->data[2][y0 * pict->linesize[2] + x0] = 107;
+        filt_frame->data[1][y0 * filt_frame->linesize[1] + x0] = 255;
+        filt_frame->data[2][y0 * filt_frame->linesize[2] + x0] = 107;
+      }          
+    } 
+    for (y = 0; y < height; y++) {
+      y30=y/ys60;
+      if((y/2)==Sy0) {
+//      exit(0);
+      }
       for (x = 0; x < width; x++) {
-         x30=x/64; 
-         #if 0
-//       if(x>Xmax-10&&x<Xmax+10&&y>Ymax-10&&y<Ymax+10) {
-         if(x>Xmid-10&&x<Xmid+10&&y>Ymid-10&&y<Ymid+10) {
-           pict->data[0][y * pict->linesize[0] + x] = 0x0;
-         }
-         #endif
-         #if 1
-         printf("%s(%d)%X\n",__FILE__,__LINE__,ptHead);
-         if(HXYV[x30/2][y30/2]>=ptHead->pt.w) {
-           pict->data[0][y * pict->linesize[0] + x] = 0x0;
-         }
-         #endif  
-         else {
-           pict->data[0][y * pict->linesize[0] + x] = filt_frame->data[0][y * filt_frame->linesize[0] + x];
-         }  
+        x30=x/xs60; 
+        #if 0
+//      if(x>Xmax-10&&x<Xmax+10&&y>Ymax-10&&y<Ymax+10) {
+        if(x>Xmid-10&&x<Xmid+10&&y>Ymid-10&&y<Ymid+10) {
+          pict->data[0][y * pict->linesize[0] + x] = 0x0;
+        }
+        #endif
+        #if 1
+        if(    (y/2 == YposLine && x/2>=Yc0 && x/2<=Yc1) 
+            || (x/2 == XposLine && y/2>=Xc0 && y/2<=Xc1)
+            || (x/2 == ZposLine && y/2>=Zc0 && y/2<=Zc1)
+            ) {
+          pict->data[0][y * pict->linesize[0] + x] = 0xFF;
+        }
+        #endif
+        #if 0
+        else if(marginal(x/2,y/2) || HXYV[x30/2][y30/2] >= ptFirst->pt.w) {
+          pict->data[0][y * pict->linesize[0] + x] = 0x0;
+        }
+        #endif
+        #if 0
+//      printf("%s(%d) %X,%X (%d,%d)\n",__FILE__,__LINE__,ptHead,ptFirst,x30,y30);
+        if(HXYV[x30/2][y30/2] >= ptFirst->pt.w ) {
+          pict->data[0][y * pict->linesize[0] + x] = 0x0;
+        }
+        #endif  
+        else {
+          pict->data[0][y * pict->linesize[0] + x] = filt_frame->data[0][y * filt_frame->linesize[0] + x];
+        }  
       }    
+    }  
+    printf("%s(%d)[%4d],(%d,%d,%d)(%d,%d,%d)(%d,%d,%d)(%d,%d,%d,%d)(%d,%d,%d,%d)\n",
+    __FILE__,__LINE__,
+    frame_index,XposLine,Xc0,Xc1,YposLine,Yc0,Yc1,ZposLine,Zc0,Zc1,
+    SposSlope,Sc0,Sc1,Sy0,TposSlope,Tc0,Tc1,Ty0);
     /* Cb and Cr */
     for (y = 0; y < height/2; y++) {
-       y30=y/36;
-       for (x = 0; x < width/2; x++) { 
-         x30=x/64; 
-         #if 0
-//       if(x>Xmax/2-10&&x<Xmax/2+10&&y>Ymax/2-10&&y<Ymax/2+10) {
-         if(x>Xmid/2-10&&x<Xmid/2+10&&y>Ymid/2-10&&y<Ymid/2+10) {
-              pict->data[1][y * pict->linesize[1] + x] = 0xFF;
-              pict->data[2][y * pict->linesize[2] + x] = 0x0;
-          }
-         #endif  
-         #if 1
-         if(HXYV[x30][y30]>=ptHead->pt.w) {
-              pict->data[1][y * pict->linesize[1] + x] = 0xFF;
-              pict->data[2][y * pict->linesize[2] + x] = 0x0;
-          }
-         #endif  
-          else {
-              pict->data[1][y * pict->linesize[1] + x] = filt_frame->data[1][y * filt_frame->linesize[1] + x];
-              pict->data[2][y * pict->linesize[2] + x] = filt_frame->data[2][y * filt_frame->linesize[2] + x];
-          }    
-       }
+      y30=y/ys60;
+ //ST     
+      for (x = 0; x < width/2; x++) { 
+        x30=x/xs60; 
+        #if 0
+//      if(x>Xmax/2-10&&x<Xmax/2+10&&y>Ymax/2-10&&y<Ymax/2+10) {
+        if(x>Xmid/2-10&&x<Xmid/2+10&&y>Ymid/2-10&&y<Ymid/2+10) {
+          pict->data[1][y * pict->linesize[1] + x] = 0xFF;
+          pict->data[2][y * pict->linesize[2] + x] = 0x0;
+        }
+        #endif
+        #if 1
+        if(    (y == YposLine && x>=Yc0 && x<=Yc1) 
+            || (x == XposLine && y>=Xc0 && y<=Xc1)
+            || (x == ZposLine && y>=Zc0 && y<=Zc1)
+            ) {
+          pict->data[1][y * pict->linesize[1] + x] = 0x00;
+          pict->data[2][y * pict->linesize[2] + x] = 0xFF;
+          if(frame_index>30) 
+          {
+//          printf("%s(%d)(%4d)(%3d,%3d,%3d)\n",__FILE__,__LINE__,frame_index,XposLine,YposLine,ZposLine);; exit(0);
+          }  
+        }
+        #endif
+        #if 0
+        else if(marginal(x,y)) {
+          pict->data[1][y * pict->linesize[1] + x] = 0x33;
+          pict->data[2][y * pict->linesize[2] + x] = 0x88;
+        }
+        else if (HXYV[x30][y30] >= ptFirst->pt.w) {
+          pict->data[1][y * pict->linesize[1] + x] = 0x22;
+          pict->data[2][y * pict->linesize[2] + x] = 0x66;
+        }
+        #endif           
+        #if 0
+        if(HXYV[x30][y30] >= ptFirst->pt.w) {
+          pict->data[1][y * pict->linesize[1] + x] = 0xFF;
+          pict->data[2][y * pict->linesize[2] + x] = 0x0;
+        }
+        #endif  
+        else {
+          pict->data[1][y * pict->linesize[1] + x] = filt_frame->data[1][y * filt_frame->linesize[1] + x];
+          pict->data[2][y * pict->linesize[2] + x] = filt_frame->data[2][y * filt_frame->linesize[2] + x];
+        }    
+      } 
     }
 #endif
 #if 0
@@ -731,7 +1448,12 @@ static AVFrame *get_video_frame(OutputStream *ost)
         printf("(%d,%d)\n",c->width, c->height);
         calc_histogram(ost->frame, ost->next_pts, c->width, c->height);
         calc_64x36(ost->frame, ost->next_pts, c->width, c->height);
+        initLineList(c->width, c->height);
+        initSlopeList(c->width, c->height);
+        FindXYZSTLineList(ost->frame, ost->next_pts, c->width, c->height);
         fill_yuv_image(ost->frame, ost->next_pts, c->width, c->height);
+        freeLineList();
+        freeSlopeList();
     }
     ost->frame->pts = ost->next_pts++;
     return ost->frame;
@@ -881,6 +1603,7 @@ void printBits(size_t const size, void const * const ptr)
     }
 }
 
+#if 0
 static void display_frame(const AVFrame *frame, AVRational time_base)
 {
     int x, y;
@@ -917,6 +1640,8 @@ static void display_frame(const AVFrame *frame, AVRational time_base)
     }
     fflush(stdout);
 }
+#endif
+
 int main(int argc, char **argv)
 {
     int ret;
