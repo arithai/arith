@@ -671,7 +671,7 @@ void freeLineList() {
   }
   lnHead=NULL;
 }
-#define MAX_JUMP_LINE 3
+#define MAX_JUMP_LINE 12
 bool marginalLine(int x,int y) {
   int diff,i,x0,y0;
   for (i=0;i<maxDeltaSpace;i++) {
@@ -691,9 +691,9 @@ bool marginalLine(int x,int y) {
 }  
 
 //(x0,y0 ...x,y,... x1,y1)
-#define ratioS  4/3
-#define ratioT -4/3
-#define MAX_JUMP_SLOPE 5
+#define ratioS  1.33333
+#define ratioT -1.33333
+#define MAX_JUMP_SLOPE 12
 typedef struct STSLOPE { //Slope A,B
   short y0;
   short c0;  //0..3840-1 =coordinate
@@ -739,14 +739,19 @@ void freeSlopeList() {
   }
   slHead=NULL;
 }
-bool marginalSlope(int x,int y) {
-  int diff,i;
-  for (i=0;i<maxDeltaSpace;i++) {
-    if(x>0 && y>0) { //v change!
+#define sign(x) (x>0?1:-1)
+#define maxDeltaSlopeSpace 1
+bool marginalSlope(int x,int y,int ystart,float ratio,int width,int height) {
+  int diff,i,x0,y0;
+  int g=sign(ratio); //g<0 uppper g>0 lower
+  for (i=-maxDeltaSlopeSpace;i<maxDeltaSlopeSpace;i++) {
+    x0=x+i;
+    y0=(int)(ystart+ratio*x0);
+    if(x0>0 && y0>0 && x0<width && y0<height ) { //v change!
       diff=abs(
-        filt_frame->data[2][ (y-1) * filt_frame->linesize[2] + x    ]+
-        filt_frame->data[2][      y* filt_frame->linesize[2] + (x-1)]-
-      2*filt_frame->data[2][      y* filt_frame->linesize[2] + x    ]);
+        filt_frame->data[2][ (y0+2*g) * filt_frame->linesize[2] + x0 ]+
+        filt_frame->data[2][      y0  * filt_frame->linesize[2] + (x0-2)]-
+      2*filt_frame->data[2][      y0  * filt_frame->linesize[2] + x0    ]);
     //printf("%s(%d) diff=%d\n",__FILE__,__LINE__,diff);
       if(diff > MAX_JUMP_SLOPE) 
        return true;  
@@ -1028,7 +1033,8 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
     for (x0 = edgeSpace+maxDeltaSpace; x0 < width/2-edgeSpace-1; x0++) {
 //    printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
       x = x0;      
-      y = (int)(y0+x*ratioS);
+      y = (int)(0.49+y0+x*ratioS);
+//    printf("%s(%d) %d,%d,%d,%d,%10.5f\n",__FILE__,__LINE__,x0,x,y0,y,ratioS);exit(0);
       if(y>height/2-edgeSpace-1) break;
 #if 1      
       Y =  filt_frame->data[0][y*2 * filt_frame->linesize[0] + x*2];
@@ -1040,7 +1046,7 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
       R = R; G= G; B = B;       
 #endif    
 //    printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
-      if(marginalSlope(x,y)){
+      if(marginalSlope(x,y,y0,ratioS,width/2,height/2)){
         if(isStart) {
           isStart=false;
           w=1;
@@ -1072,8 +1078,8 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
               }  
               countJump=0;         
               isStart=true;
-//            printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
-//            if(Sw>100) exit(0);
+//            printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d),%d\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw,Sy0);        
+//            if(Sw>70) exit(0);
             }            
           }  
         }
@@ -1083,12 +1089,14 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
       Sw=w;
       slList->s.w=Sw;
       Sfi=frame_index;
-      SposSlope=x;
+      SposSlope=y;
       Sc0=c0;
       slList->s.c0=Sc0;
       Sc1=c1;
       slList->s.c1=Sc1;
       Sy0 = y0;
+//      printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d),%d\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw,Sy0);        
+//      if(Sw>70) exit(0);
     }   
     slListNext=slList->next;
     if(slListNext==NULL) break;
@@ -1110,7 +1118,7 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
     for (x0 = edgeSpace+maxDeltaSpace; x0 < width/2-edgeSpace-1; x0++) {
 //    printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
       x = x0;      
-      y = (int)(y0+x*ratioT);
+      y = (int)(0.49+y0+x*ratioT);
       if(y<edgeSpace+maxDeltaSpace) break;
 #if 1      
       Y =  filt_frame->data[0][y*2 * filt_frame->linesize[0] + x*2];
@@ -1122,7 +1130,7 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
       R = R; G= G; B = B;       
 #endif    
 //    printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
-      if(marginalSlope(x,y)){
+      if(marginalSlope(x,y,y0,ratioT,width/2,height/2)){
         if(isStart) {
           isStart=false;
           w=1;
@@ -1134,7 +1142,7 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
         }  
         countJump=1;
         c1=x; //so End
-//      printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
+        if(Tfi==7)printf("%s(%d)fi=%3d,t=(%4d,%4d),tpos=%4d,(%d,%d),(%d,%d),%d,%d\n",__FILE__,__LINE__,Tfi,x,y,TposSlope,Tc0,Tc1,w,Tw,Ty0,y0);        
       }
       else {
         if(isStart==false) { 
@@ -1142,7 +1150,7 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
             countJump++;
 //          printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
             if(countJump>maxDeltaSpace) {
-              if(w>Sw) {
+              if(w>Tw) {
                 Tw=w;
                 slList->s.w=Tw;
                 TposSlope=y;
@@ -1154,8 +1162,8 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
               }  
               countJump=0;         
               isStart=true;
-//            printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
-//            if(Sw>100) exit(0);
+              if(Tfi==7)printf("%s(%d)fi=%3d,t=(%4d,%4d),tpos=%4d,(%d,%d),(%d,%d),%d,%d\n",__FILE__,__LINE__,Tfi,x,y,TposSlope,Tc0,Tc1,w,Tw,Ty0,y0);        
+  //          if(Tw>70) exit(0);
             }            
           }  
         }
@@ -1164,21 +1172,24 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
     if(w>Tw) {
       Tw=w;
       slList->s.w=Tw;
-      Tfi=frame_index;
-      TposSlope=x;
+      TposSlope=y;
       Tc0=c0;
       slList->s.c0=Tc0;
       Tc1=c1;
       slList->s.c1=Tc1;
       Ty0 = y0;
-    }   
+      if(Tfi==7)printf("%s(%d)fi=%3d,t=(%4d,%4d),tpos=%4d,(%d,%d),(%d,%d),%d,%d\n",__FILE__,__LINE__,Tfi,x,y,TposSlope,Tc0,Tc1,w,Tw,Ty0,y0);        
+//    if(Tw>70) exit(0);
+    }  
     slListNext=slList->next;
     if(slListNext==NULL) break;
     slList=slListNext;  
   }  
-  printf("%s(%d)fi=%3d,t=%d,(%d,%d,%d),%d\n",__FILE__,__LINE__,Tfi,TposSlope,Tc0,Tc1,Ty0,Tw);
+  if(Tfi==7)printf("%s(%d)fi=%3d,t=%d,(%d,%d,%d),%d\n",__FILE__,__LINE__,Tfi,TposSlope,Tc0,Tc1,Ty0,Tw);
 
   printf("FindXYZSTLineList (%d,%d) %lX end\n",width,height,(long)ptHead);
+//if(Tfi==7) exit(0);
+
   return;
 }
 int Xmax,Xleft,Xright,Ymax,Yup,Ydown;
@@ -1270,32 +1281,6 @@ static void fill_yuv_image(AVFrame *pict, int frame_index,
     }
 #endif
 #if 1
-    for (x0 = Sc0; x0 < Sc1; x0++) {
-      y0=(int)(Sy0+x0*ratioS);
-      if(y0<height/2-edgeSpace-1) {
-//      printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,x0,y0);
-        filt_frame->data[0][2*y0 * filt_frame->linesize[0] + 2*x0] = 29;
-        filt_frame->data[0][2*y0 * filt_frame->linesize[0] + 2*x0] = 29;
-        filt_frame->data[0][(2*y0+1) * filt_frame->linesize[0] + 2*x0] = 29;
-        filt_frame->data[0][(2*y0+1) * filt_frame->linesize[0] + 2*x0+1] = 29;
-        pict->data[1][y0 * pict->linesize[1] + x0] = 255;
-        pict->data[2][y0 * pict->linesize[2] + x0] = 107;
-        filt_frame->data[1][y0 * filt_frame->linesize[1] + x0] = 255;
-        filt_frame->data[2][y0 * filt_frame->linesize[2] + x0] = 107;
-      }          
-      y0=(int)(Ty0+x0*ratioT);
-      if(y0>edgeSpace+maxDeltaSpace) {
-//      printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,x0,y0);
-        filt_frame->data[0][2*y0 * filt_frame->linesize[0] + 2*x0] = 29;
-        filt_frame->data[0][2*y0 * filt_frame->linesize[0] + 2*x0] = 29;
-        filt_frame->data[0][(2*y0+1) * filt_frame->linesize[0] + 2*x0] = 29;
-        filt_frame->data[0][(2*y0+1) * filt_frame->linesize[0] + 2*x0+1] = 29;
-        pict->data[1][y0 * pict->linesize[1] + x0] = 255;
-        pict->data[2][y0 * pict->linesize[2] + x0] = 107;
-        filt_frame->data[1][y0 * filt_frame->linesize[1] + x0] = 255;
-        filt_frame->data[2][y0 * filt_frame->linesize[2] + x0] = 107;
-      }          
-    } 
     for (y = 0; y < height; y++) {
       y30=y/ys60;
       if((y/2)==Sy0) {
@@ -1310,9 +1295,9 @@ static void fill_yuv_image(AVFrame *pict, int frame_index,
         }
         #endif
         #if 1
-        if(    (y/2 == YposLine && x/2>=Yc0 && x/2<=Yc1) 
-            || (x/2 == XposLine && y/2>=Xc0 && y/2<=Xc1)
-            || (x/2 == ZposLine && y/2>=Zc0 && y/2<=Zc1)
+        if(    (y/2 >= YposLine && y/2 < (YposLine+5) && x/2>=Yc0 && x/2<=Yc1) 
+            || (x/2 >= XposLine && x/2 < (XposLine+5) && y/2>=Xc0 && y/2<=Xc1)
+            || (x/2 >= ZposLine && x/2 < (ZposLine+5) && y/2>=Zc0 && y/2<=Zc1)
             ) {
           pict->data[0][y * pict->linesize[0] + x] = 0xFF;
         }
@@ -1351,9 +1336,9 @@ static void fill_yuv_image(AVFrame *pict, int frame_index,
         }
         #endif
         #if 1
-        if(    (y == YposLine && x>=Yc0 && x<=Yc1) 
-            || (x == XposLine && y>=Xc0 && y<=Xc1)
-            || (x == ZposLine && y>=Zc0 && y<=Zc1)
+        if(    (y >= YposLine && y < (YposLine+5) && x>=Yc0 && x<=Yc1) 
+            || (x >= XposLine && x < (XposLine+5) && y>=Xc0 && y<=Xc1)
+            || (x >= ZposLine && x < (ZposLine+5) && y>=Zc0 && y<=Zc1)
             ) {
           pict->data[1][y * pict->linesize[1] + x] = 0x00;
           pict->data[2][y * pict->linesize[2] + x] = 0xFF;
@@ -1381,10 +1366,40 @@ static void fill_yuv_image(AVFrame *pict, int frame_index,
         #endif  
         else {
           pict->data[1][y * pict->linesize[1] + x] = filt_frame->data[1][y * filt_frame->linesize[1] + x];
-          pict->data[2][y * pict->linesize[2] + x] = filt_frame->data[2][y * filt_frame->linesize[2] + x];
+          pict->data[2][y * pict->linesize[2] + x] = filt_frame->data[2][y * filt_frame->linesize[2] + x];          
         }    
       } 
     }
+    for (x0 = Sc0; x0 < Sc1; x0++) {
+      y0=(int)(Sy0+x0*ratioS);
+      for (y=0;y<5;y++) {
+        if(y0<(height/2-1)) {
+//        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,x0,y0);
+          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0]   = 29;
+          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0+1] = 29;
+          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0]   = 29;
+          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0+1] = 29;
+          pict->data[1][y0 * pict->linesize[1] + x0] = 255;
+          pict->data[2][y0 * pict->linesize[2] + x0] = 107;
+          y0++;
+        }  
+      }          
+    } 
+    for (x0 = Tc0; x0 < Tc1; x0++) {
+      y0=(int)(Ty0+x0*ratioT);
+      for (y=0;y<5;y++) {
+        if(y0>0) {
+//        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,x0,y0);
+          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0]   = 29;
+          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0+1] = 29;
+          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0]   = 29;
+          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0+1] = 29;
+          pict->data[1][y0 * pict->linesize[1] + x0] = 255;
+          pict->data[2][y0 * pict->linesize[2] + x0] = 107;
+          y0--;
+        }  
+      }          
+    } 
 #endif
 #if 0
     Xmid=800;Ymid=800;
