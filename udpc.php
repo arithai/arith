@@ -2,26 +2,21 @@
 /*
 	Simple php udp socket client
 */
-
 //Reduce errors
-error_reporting(~E_WARNING);
-
-$server = '127.0.0.1';
-$port = 9998;
-
-if(!($sock = socket_create(AF_INET, SOCK_DGRAM, 0)))
-{
+  error_reporting(~E_WARNING);
+  $server = '127.0.0.1';
+  $port = 9998;
+  if(!($sock = socket_create(AF_INET, SOCK_DGRAM, 0)))
+  {
 	$errorcode = socket_last_error();
     $errormsg = socket_strerror($errorcode);
     
     die("Couldn't create socket: [$errorcode] $errormsg \n");
-}
-
-echo "Socket created \n";
-
+  }
+  echo "Socket created \n";
 //Communication loop
-while(1)
-{
+  while(1)
+  {
 	//Take some input to send
 	echo 'Enter a message to send : ';
 //	$input = fgets(STDIN);
@@ -46,5 +41,5 @@ while(1)
 	
 	echo "Reply : $reply";
     break;
-}
+  }
 ?>
