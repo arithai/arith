@@ -183,8 +183,6 @@
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=big5' />
 <meta http-equiv='expires' content='-1'>
-<script async src=\"https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9319053728780195\"
-     crossorigin=\"anonymous\"></script>
 <title>".$IDT[$IDii].",arithai.com,2025
 </title>
 </head>
@@ -202,13 +200,6 @@
       $fdata.="background=".$udira."/back1.gif "; 
       $fdata.="bgcolor=#FFEEFF align=center><font color=blue>"; //$IDO[$IDii]";
 
-if (strpos($_SERVER['HTTP_USER_AGENT'],"MSIE")) {
-      $fdata.="<embed height=120 type=application/x-shockwave-flash width=450 src=http://js1.bloggerads.net/bloggerads_w1.swf?blogid=20120109000042&fid=5&allowscriptaccess='never'></embed>";
-}
-else 
-{
-      $fdata.="<script type='text/javascript' src='http://js1.bloggerads.net/showbanner.aspx?blogid=20120109000042&amp;charset=utf-8'></script>";
-}
       $fdata.="
 <img src=a5.gif alt='Guest Book' border=0>
 <a href='/page/guestbook.php'>-討論區<font size=+3>GuestBook</a></a><br>"
@@ -240,13 +231,6 @@ else
 //    }  
       $fdata.="><font color=#001122>\n"; 
 
-if (strpos($_SERVER['HTTP_USER_AGENT'],"MSIE")) {
-      $fdata.="<embed height=120 type=application/x-shockwave-flash width=450 src=http://js1.bloggerads.net/bloggerads_w1.swf?blogid=20120109000042&fid=5&allowscriptaccess='never'></embed>";
-}
-else 
-{
-      $fdata.="<script type='text/javascript' src='http://js1.bloggerads.net/showbanner.aspx?blogid=20120109000042&amp;charset=utf-8'></script>";
-}
 
       $fdata.="
 <img src=a5.gif alt='Guest Book' border=0>
