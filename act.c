@@ -1,5 +1,5 @@
 //act.c ArithAI Yang 2025.01.17
-//Purpose:Arithmetics/Artificial/Algorithmic Catgory Theory
+//Purpose:Algebraic/Arithmetics/Artificial/Algorithmic Catgory Theory
 //§ä­±,§ä½u AVFrame *filt_frame; frame_index 
 #define _XOPEN_SOURCE 600 /* for usleep */
 #include <unistd.h>
@@ -36,6 +36,13 @@
 #define CYCbCr2R(Y, Cb, Cr) CLIP( Y + ( 91881 * Cr >> 16 ) - 179 )
 #define CYCbCr2G(Y, Cb, Cr) CLIP( Y - (( 22544 * Cb + 46793 * Cr ) >> 16) + 135)
 #define CYCbCr2B(Y, Cb, Cr) CLIP( Y + (116129 * Cb >> 16 ) - 226 )
+
+#define WHITEY 255
+#define WHITEU 128
+#define WHITEV 128
+#define BLACKY 0
+#define BLACKU 128
+#define BLACKV 128
 
 #define GLOBAL_WIDTH  640*6
 #define GLOBAL_HEIGHT 360*6
@@ -172,6 +179,14 @@ typedef struct OutputStream {
 #include <stdbool.h>
 #define MAX_JUMP 2
 extern AVFrame *filt_frame;
+int frameWidth,frameHeight;
+extern unsigned char *Ybefore;
+extern unsigned char *Ubefore;
+extern unsigned char *Vbefore;
+extern unsigned char *Ydiffnow;
+extern unsigned char *Udiffnow;
+extern unsigned char *Vdiffnow;
+extern int Ylinesize,Ulinesize,Vlinesize;
 bool marginal(x,y) {
   int diff;
   if(x>0 && y>0) { //v change!
@@ -815,54 +830,93 @@ extern int Xmax,Xleft,Xright,Ymax,Yup,Ydown;
 //extern int HX[GLOBAL_WIDTH],HY[GLOBAL_HEIGHT];
 extern int HX[GLOBAL_HEIGHT/2],HY[GLOBAL_WIDTH/2];
 void calc_histogram(AVFrame *pict, int frame_index,
-                          int width, int height) 
+                    int width, int height) 
 {                          
-    int x, y,i,maxv,maxi;
-    i = frame_index;
-    printf("i=%d,(%d,%d)\n",i,width,height);
-    maxi=0;
-    maxv=0; 
-    for (y = 0; y < height/2; y++) {
-       HX[y]=0;  
-       for (x = 0; x < width/2; x++) {
-          HX[y]+=filt_frame->data[2][y * filt_frame->linesize[2] + x];  
-       }
-       if(HX[y]>maxv) {
-         maxi=y;
-         maxv=HX[y]; 
-       }
-    }
-    Ymax=maxi*2;   
-    for (y = 0; y < height/2; y++) {
-       if(HX[y]>=maxv-30) break;
-    }
-    Yup=2*y;
-    for (y = height/2-1; y > 0; y--) {
-       if(HX[y]>=maxv-30) break;
-    }
-    Ydown=2*y;    
-    printf("Ymax=(%d,%d,%d)%d\n",Ymax,Yup,Ydown,maxv);
-    maxi=0;
-    maxv=0; 
-    for (x = 0; x < width/2; x++) { 
-       HY[x]=0;  
-       for (y = 0; y < height/2; y++) {
-          HY[x]+=filt_frame->data[2][y * filt_frame->linesize[2] + x];  
-       } 
-       if(HY[x]>maxv) {
-         maxi=x;
-         maxv=HY[x]; 
-       }
-    }   
-    Xmax=maxi*2;
+  int x, y,i,maxv,maxi;
+  i = frame_index;
+  printf("i=%d,(%d,%d)\n",i,width,height);
+  maxi=0;
+  maxv=0; 
+  for (y = 0; y < height/2; y++) {
+    HX[y]=0;  
     for (x = 0; x < width/2; x++) {
-       if(HY[x]>=maxv-30) break;
+      HX[y]+=filt_frame->data[2][y * filt_frame->linesize[2] + x];  
     }
-    Xleft=2*x;
-    for (x = width/2-1; x > 0; x--) {
-       if(HY[x]>=maxv-30) break;
+    if(HX[y]>maxv) {
+      maxi=y;
+      maxv=HX[y]; 
     }
-    Xright=2*x;
-    printf("Xmax=(%d,%d,%d)%d\n",Xmax,Xleft,Xright,maxv);
+  }
+  Ymax=maxi*2;   
+  for (y = 0; y < height/2; y++) {
+    if(HX[y]>=maxv-30) break;
+  }
+  Yup=2*y;
+  for (y = height/2-1; y > 0; y--) {
+    if(HX[y]>=maxv-30) break;
+  }
+  Ydown=2*y;    
+  printf("Ymax=(%d,%d,%d)%d\n",Ymax,Yup,Ydown,maxv);
+  maxi=0;
+  maxv=0; 
+  for (x = 0; x < width/2; x++) { 
+    HY[x]=0;  
+    for (y = 0; y < height/2; y++) {
+      HY[x]+=filt_frame->data[2][y * filt_frame->linesize[2] + x];  
+    } 
+    if(HY[x]>maxv) {
+      maxi=x;
+      maxv=HY[x]; 
+    }
+  }   
+  Xmax=maxi*2;
+  for (x = 0; x < width/2; x++) {
+    if(HY[x]>=maxv-30) break;
+  }
+  Xleft=2*x;
+  for (x = width/2-1; x > 0; x--) {
+    if(HY[x]>=maxv-30) break;
+  }
+  Xright=2*x;
+  printf("Xmax=(%d,%d,%d)%d\n",Xmax,Xleft,Xright,maxv);
 }
-
+void calc_edge(int frame_index, int width, int height) { 
+  int x, y, i, x2, y2;                    
+  int Y[9],U[9],V[9],g;
+  i = frame_index;
+  printf("%s(%d),i=%d,(%d,%d)\n",__FILE__,__LINE__,i,width,height);
+ //printf("fill_yuv_image %s(%d)\n",__FILE__,__LINE__);
+   for (y = 2; y < height-2; y++) {
+     y2 = y/2;
+     for (x = 2; x < width-2; x++) {
+       x2 = x/2;
+       g= abs(Ydiffnow[y *     Ylinesize + x]-
+              Ydiffnow[(y-1) * Ylinesize + (x-1)])+
+          abs(Ydiffnow[y *     Ylinesize + x]-
+              Ydiffnow[(y-1) * Ylinesize + x])+
+          abs(Ydiffnow[y *     Ylinesize + x]-         
+              Ydiffnow[(y-1) * Ylinesize + (x+1)])+
+          abs(Ydiffnow[y *     Ylinesize + x]-              
+              Ydiffnow[y *     Ylinesize + (x-1)])+
+          abs(Ydiffnow[y *     Ylinesize + x]-              
+              Ydiffnow[y *     Ylinesize + (x+1)])+
+          abs(Ydiffnow[y *     Ylinesize + x]-              
+              Ydiffnow[(y+1) * Ylinesize + (x-1)])+
+          abs(Ydiffnow[y *     Ylinesize + x]-              
+              Ydiffnow[(y+1) * Ylinesize + x])+
+          abs(Ydiffnow[y *     Ylinesize + x]-              
+              Ydiffnow[(y+1) * Ylinesize + (x+1)]);
+       if(g>80*8)
+       {
+          Ydiffnow[y *  Ylinesize + x]  = BLACKY;                
+          Udiffnow[y2 * Ulinesize + x2] = BLACKU;
+          Vdiffnow[y2 * Vlinesize + x2] = BLACKV;
+        }  
+        else {
+          Ydiffnow[y *  Ylinesize + x]  = WHITEY;                
+          Udiffnow[y2 * Ulinesize + x2] = WHITEU;
+          Vdiffnow[y2 * Vlinesize + x2] = WHITEV;
+        }  
+     }
+   }  
+ }
