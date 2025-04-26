@@ -125,17 +125,6 @@ static int video_stream_index = -1;
 #define STREAM_FRAME_RATE 25 /* 25 images/s */
 #define STREAM_PIX_FMT    AV_PIX_FMT_YUV420P /* default pix_fmt */
 #define SCALE_FLAGS SWS_BICUBIC
-
-AVFrame *filt_frame;
-int frameWidth,frameHeight;
-unsigned char *Ybefore=NULL;
-unsigned char *Ubefore=NULL;
-unsigned char *Vbefore=NULL;
-unsigned char *Ydiffnow=NULL;
-unsigned char *Udiffnow=NULL;
-unsigned char *Vdiffnow=NULL;
-int Ylinesize,Ulinesize,Vlinesize;
-
 // a wrapper around a single output AVStream
 typedef struct OutputStream {
     AVStream *st;
@@ -176,10 +165,8 @@ static int write_frame(AVFormatContext *fmt_ctx, AVCodecContext *c,
     }
     while (ret >= 0) {
         ret = avcodec_receive_packet(c, pkt);
-        printf("write_frame %s(%d) %d ret=%d,%d,%d\n",__FILE__,__LINE__,frame->data[0][2],ret,AVERROR(EAGAIN),AVERROR_EOF);
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
             break;
-        }    
         else if (ret < 0) {
             fprintf(stderr, "Error encoding a frame: %s\n", av_err2str(ret));
             exit(1);
@@ -190,7 +177,6 @@ static int write_frame(AVFormatContext *fmt_ctx, AVCodecContext *c,
         /* Write the compressed frame to the media file. */
         log_packet(fmt_ctx, pkt);
         ret = av_interleaved_write_frame(fmt_ctx, pkt);
-//      ret = av_write_frame(fmt_ctx, pkt);
         /* pkt is now blank (av_interleaved_write_frame() takes ownership of
          * its contents and resets pkt), so that no unreferencing is necessary.
          * This would be different if one used av_write_frame(). */
@@ -233,7 +219,7 @@ static void add_stream(OutputStream *ost, AVFormatContext *oc,
     }
     ost->enc = c;
     switch ((*codec)->type) {
-      case AVMEDIA_TYPE_AUDIO:
+    case AVMEDIA_TYPE_AUDIO:
         c->sample_fmt  = (*codec)->sample_fmts ?
             (*codec)->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
         c->bit_rate    = 64000;
@@ -248,7 +234,7 @@ static void add_stream(OutputStream *ost, AVFormatContext *oc,
         av_channel_layout_copy(&c->ch_layout, &(AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO);
         ost->st->time_base = (AVRational){ 1, c->sample_rate };
         break;
-      case AVMEDIA_TYPE_VIDEO:
+    case AVMEDIA_TYPE_VIDEO:
         c->codec_id = codec_id;
 
         c->bit_rate = 400000;
@@ -490,6 +476,9 @@ static void open_video(AVFormatContext *oc, const AVCodec *codec,
         exit(1);
     }
 } 
+AVFrame *filt_frame;
+AVFrame *filt_frame_before;
+AVFrame *filt_diffnow;
 #include <stdbool.h>
 #define MAX_JUMP 2
 bool marginal(int x,int y);
@@ -592,7 +581,7 @@ static AVFrame *get_video_frame(OutputStream *ost)
                   ost->tmp_frame->linesize, 0, c->height, ost->frame->data,
                   ost->frame->linesize);
     } else {
-        printf("%s(%d)%d,(%d,%d)\n",__FILE__,__LINE__,ost->next_pts,c->width, c->height);
+        printf("%s(%d) (%d,%d)\n",__FILE__,__LINE__,c->width, c->height);
 #if 0
         calc_histogram(ost->frame, ost->next_pts, c->width, c->height);
         calc_64x36(ost->frame, ost->next_pts, c->width, c->height);
@@ -610,94 +599,143 @@ static AVFrame *get_video_frame(OutputStream *ost)
     return ost->frame;
 }
 
-//unsigned char *filt_diffnow_buffer=NULL;
-//unsigned char *filt_before_buffer=NULL;
-int r[2][2],g[2][2],b[2][2];
-int re,ge,be,ra,ga,ba;
-extern void calc_matrix(int x,int y);
-void copyFrame_now() {
-  int x,y,x2,y2,x0,y0,Y,U,V;
-  if(Ydiffnow == NULL) {
-    frameWidth    = filt_frame->width;
-    frameHeight   = filt_frame->height;
-    Ylinesize =  filt_frame->linesize[0];
-    Ulinesize =  filt_frame->linesize[1];
-    Vlinesize =  filt_frame->linesize[2];    
-    Ydiffnow = (unsigned char *)malloc(Ylinesize*frameHeight);
-    Udiffnow = (unsigned char *)malloc(Ulinesize*frameHeight);
-    Vdiffnow = (unsigned char *)malloc(Vlinesize*frameHeight);
-  }
-#if 1
-  for (y = 0; y < filt_frame->height; y++) {
+void copyFrame_now(int frame_index) {
+  int ret,x,y,x2,y2,Y,U,V,r,g,b;
+ 
+  filt_diffnow->format = filt_frame->format;
+  filt_diffnow->width = filt_frame->width;
+  filt_diffnow->height = filt_frame->height;
+  printf("copyFrame %s(%d)\n",__FILE__,__LINE__);
+  filt_diffnow->channels = filt_frame->channels;
+  filt_diffnow->channel_layout = filt_frame->channel_layout;
+  filt_diffnow->nb_samples = filt_frame->nb_samples;
+  printf("copyFrame %s(%d)\n",__FILE__,__LINE__);
+  av_frame_get_buffer(filt_diffnow, 32);
+//av_frame_copy(filt_diffnow, filt_frame);
+  av_frame_copy_props(filt_diffnow, filt_frame);
+//memcpy(dst,src,sizeof(AVFrame));
+  filt_frame_before->extended_data  = filt_frame->extended_data;
+  memcpy(filt_diffnow->data, filt_frame->data, sizeof(filt_frame->data));
+  ret = av_frame_copy_props(filt_diffnow, filt_frame);
+//chane to green  
+  for (y = 0; y < filt_diffnow->height; y++) {
     y2 = y/2;
-    for (x = 0; x < filt_frame->width; x++) {
-      calc_matrix(x,y);     
+    for (x = 0; x < filt_diffnow->width; x++) {
       x2 = x/2;
-//    if(ga > 128 && ba > 32) {
-      if(ga > 128) {
-//    if(ge > 16 && ba > 16) {
-//      printf("(%5d,%5d,%5d)\n",re,ge,be);
-//    if(r[1][1]<128  && g[1][1] > 128) {
-        Ydiffnow[y * Ylinesize + x]  = BLACKY;
-        Udiffnow[y2* Ulinesize + x2] = BLACKU;
-        Vdiffnow[y2* Vlinesize + x2] = BLACKV;
+#if 0            
+      Y=filt_diffnow->data[0][y * filt_diffnow->linesize[0] + x];
+      U=filt_diffnow->data[1][y2* filt_diffnow->linesize[1] + x2];
+      V=filt_diffnow->data[2][y2* filt_diffnow->linesize[2] + x2];
+      r=YUV2R(Y,U,V);
+      g=YUV2G(Y,U,V);
+      b=YUV2B(Y,U,V);
+      if(r<128  && g > 128) {
+        filt_diffnow->data[0][y * filt_diffnow->linesize[0] + x]  = BLACKY;
+        filt_diffnow->data[1][y2* filt_diffnow->linesize[1] + x2] = BLACKU;
+        filt_diffnow->data[2][y2* filt_diffnow->linesize[2] + x2] = BLACKV;
 //      printf("%s(%d),%4d,%4d,%5d,%5d,%5d,%5d,%5d,%5d\n",__FILE__,__LINE__,y,x,Y,U,V,r,g,b);
       }
       else {
-        Ydiffnow[y * Ylinesize + x]  = WHITEY;
-        Udiffnow[y2* Ulinesize + x2] = WHITEU;
-        Vdiffnow[y2* Vlinesize + x2] = WHITEV;
+        filt_diffnow->data[0][y * filt_diffnow->linesize[0] + x]  = WHITEY;
+        filt_diffnow->data[1][y2* filt_diffnow->linesize[1] + x2] = WHITEU;
+        filt_diffnow->data[2][y2* filt_diffnow->linesize[2] + x2] = WHITEV;
 //      printf("%s(%d),%4d,%4d,%5d,%5d,%5d,%5d,%5d,%5d\n",__FILE__,__LINE__,y,x,Y,U,V,r,g,b);
+      }
+#endif
+      #define  REDY   76
+      #define  REDU   84
+      #define  REDV   255
+      #define  GREENY 149
+      #define  GREENU 43
+      #define  GREENV 21
+      #define  BLUEY  29
+      #define  BLUEU  255
+      #define  BLUEV  107
+      
+      if(x<(700+3*(frame_index%3)) && x>400) {
+        if(y<(int)(1200+(x-400)*4/3) && y>=1200) {      //lower 
+          filt_diffnow->data[0][y * filt_diffnow->linesize[0] +   x]   = REDY;   //R
+          filt_diffnow->data[1][y2 * filt_diffnow->linesize[1] + x2]   = REDU;
+          filt_diffnow->data[2][y2 * filt_diffnow->linesize[2] + x2]   = REDV; 
+        }
+        else if (y>(int)(1200-(x-400)*4/3) && y<1200) { //Upper
+          filt_diffnow->data[0][y * filt_diffnow->linesize[0] +   x]   = REDY;   //R
+          filt_diffnow->data[1][y2 * filt_diffnow->linesize[1] + x2]   = REDU;
+          filt_diffnow->data[2][y2 * filt_diffnow->linesize[2] + x2]   = REDV; 
+        }
+        else {
+          filt_diffnow->data[0][y * filt_diffnow->linesize[0] +   x] = GREENY;  //G
+          filt_diffnow->data[1][y2 * filt_diffnow->linesize[1] + x2] = GREENU;   
+          filt_diffnow->data[2][y2 * filt_diffnow->linesize[2] + x2] = GREENV;
+        }
       }  
+      else if (x > 1600 || y > 1600) {
+        filt_diffnow->data[0][y * filt_diffnow->linesize[0] +   x]   = GREENY;  //G
+        filt_diffnow->data[1][y2 * filt_diffnow->linesize[1] + x2]   = GREENU;   
+        filt_diffnow->data[2][y2 * filt_diffnow->linesize[2] + x2]   = GREENV;
+      }
+      else if ( x > 800 && x < 1600 && y > 800 && y < 1600 ) {
+        filt_diffnow->data[0][y * filt_diffnow->linesize[0] +   x]  = REDY;   //R
+        filt_diffnow->data[1][y2 * filt_diffnow->linesize[1] + x2]  = REDU;
+        filt_diffnow->data[2][y2 * filt_diffnow->linesize[2] + x2]  = REDV; 
+      }
+      else {
+        filt_diffnow->data[0][y * filt_diffnow->linesize[0] +   x] = GREENY;  //G
+        filt_diffnow->data[1][y2 * filt_diffnow->linesize[1] + x2] = GREENU;   
+        filt_diffnow->data[2][y2 * filt_diffnow->linesize[2] + x2] = GREENV;
+      }                       
     }
   }    
-#endif  
+  
+  if (ret < 0) { av_frame_unref(filt_diffnow);}
+  
+  ret = ret;
 }
 
 void copyFrame() {
-  int x,y,x2,y2;
-  if(Ybefore == NULL) {
-    frameWidth    = filt_frame->width;
-    frameHeight   = filt_frame->height;
-    Ylinesize =  filt_frame->linesize[0];
-    Ulinesize =  filt_frame->linesize[1];
-    Vlinesize =  filt_frame->linesize[2];    
-    Ybefore = (unsigned char *)malloc(Ylinesize*frameHeight);
-    Ubefore = (unsigned char *)malloc(Ulinesize*frameHeight);
-    Vbefore = (unsigned char *)malloc(Vlinesize*frameHeight);
-  }
-  for (y = 0; y < filt_frame->height; y++) {
-    y2 = y/2;
-    for (x = 0; x < filt_frame->width; x++) {
-      x2 = x/2;
-      Ybefore[y  * Ylinesize + x] =  filt_frame->data[0][y * Ylinesize + x];
-      Ubefore[y2 * Ulinesize + x2] = filt_frame->data[1][y2* Ulinesize + x2];
-      Vbefore[y2 * Vlinesize + x2] = filt_frame->data[2][y2* Vlinesize + x2];
-    }  
-  }    
+  int ret;
+  
+  filt_before->format = filt_frame->format;
+  filt_before->width = filt_frame->width;
+  filt_before->height = filt_frame->height;
+  printf("copyFrame %s(%d)\n",__FILE__,__LINE__);
+  filt_before->channels = filt_frame->channels;
+  filt_before->channel_layout = filt_frame->channel_layout;
+  filt_before->nb_samples = filt_frame->nb_samples;
+  printf("copyFrame %s(%d)\n",__FILE__,__LINE__);
+  av_frame_get_buffer(filt_before, 32);
+//av_frame_copy(filt_before, filt_frame);
+  av_frame_copy_props(filt_before, filt_frame);
+//memcpy(dst,src,sizeof(AVFrame));
+  filt_before->extended_data  = filt_frame->extended_data;
+  memcpy(filt_before->data, filt_frame->data, sizeof(filt_frame->data));
+  ret = av_frame_copy_props(filt_before, filt_frame);
+  if (ret < 0) { av_frame_unref(filt_before);}
+  
+  ret = ret;
 }
 
 void copyFrame_diffnow() {
-  int x,y,x2,y2;
-  if(Ybefore == NULL) {
-    frameWidth    = filt_frame->width;
-    frameHeight   = filt_frame->height;
-    Ylinesize =  filt_frame->linesize[0];
-    Ulinesize =  filt_frame->linesize[1];
-    Vlinesize =  filt_frame->linesize[2];    
-    Ybefore = (unsigned char *)malloc(Ylinesize*frameHeight);
-    Ubefore = (unsigned char *)malloc(Ulinesize*frameHeight);
-    Vbefore = (unsigned char *)malloc(Vlinesize*frameHeight);
-  }  
-  for (y = 0; y < filt_frame->height; y++) {
-    y2 = y/2;
-    for (x = 0; x < filt_frame->width; x++) {
-      x2 = x/2;
-      Ybefore[y * Ylinesize + x]  = Ydiffnow[y  * Ylinesize + x];
-      Ubefore[y2* Ulinesize + x2] = Udiffnow[y2 * Ulinesize + x2];
-      Vbefore[y2* Vlinesize + x2] = Vdiffnow[y2 * Vlinesize + x2];
-    }  
-  }    
+  int ret;
+  
+  filt_before->format = filt_diffnow->format;
+  filt_before->width = filt_diffnow->width;
+  filt_before->height = filt_diffnow->height;
+  printf("copyFrame_diffnow %s(%d)\n",__FILE__,__LINE__);
+  filt_before->channels = filt_diffnow->channels;
+  filt_before->channel_layout = filt_diffnow->channel_layout;
+  filt_before->nb_samples = filt_diffnow->nb_samples;
+  printf("copyFrame_diffnow %s(%d)\n",__FILE__,__LINE__);
+  av_frame_get_buffer(filt_before, 32);
+//av_frame_copy(filt_before, filt_frame);
+  av_frame_copy_props(filt_before, filt_diffnow);
+//memcpy(dst,src,sizeof(AVFrame));
+  filt_before->extended_data  = filt_diffnow->extended_data;
+  memcpy(filt_before->data, filt_diffnow->data, sizeof(filt_diffnow->data));
+  ret = av_frame_copy_props(filt_before, filt_diffnow);
+  if (ret < 0) { av_frame_unref(filt_before);}
+  
+  ret = ret;
 }
 
 /*
@@ -906,10 +944,11 @@ int main(int argc, char **argv)
 //mux end
     now0 = time(NULL);
     frame = av_frame_alloc();
-    filt_frame   = av_frame_alloc();
-
+    filt_frame = av_frame_alloc();
+    filt_before = av_frame_alloc();
+    filt_diffnow = av_frame_alloc();
     packet = av_packet_alloc();
-    if (!frame || !filt_frame || !packet) {
+    if (!frame || !filt_frame || !filt_before|| !filt_diffnow || !packet) {
         fprintf(stderr, "Could not allocate frame or packet\n");
         exit(1);
     }
@@ -1039,6 +1078,7 @@ int main(int argc, char **argv)
 
 
 //mux end
+
     /* read all packets */
     while (1) {
         if ((ret = av_read_frame(fmt_ctx, packet)) < 0)
@@ -1066,36 +1106,25 @@ int main(int argc, char **argv)
                 /* pull filtered frames from the filtergraph */
                 while (1) {
                     ret = av_buffersink_get_frame(buffersink_ctx, filt_frame);
-                    printf("%s(%d),%3d,%3d,%3d,%3d\n",__FILE__,__LINE__,
-                      frame->data[0][2],filt_frame->data[0][2],
-                      encode_video,encode_audio);
-                    if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                      printf("%s(%d),%3d,%3d\n",__FILE__,__LINE__,
-                        encode_video,encode_audio);                   
-                      break;
-                    } 
-                    if (ret < 0) {
-                      printf("%s(%d),%3d,%3d,%3d\n",__FILE__,__LINE__,
-                             filt_frame->data[0][2],encode_video,encode_audio);                   
-                      goto end;
-                    }  
+                    if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+                        break;
+                    if (ret < 0)
+                        goto end;
 //                  display_frame(filt_frame, buffersink_ctx->inputs[0]->time_base);
 #if 1
                     /* select the stream to encode */
                     if (encode_video &&
                       (!encode_audio || av_compare_ts(video_st.next_pts, video_st.enc->time_base,
                         audio_st.next_pts, audio_st.enc->time_base) <= 0)) {
-                        printf("%s(%d),%3d\n",__FILE__,__LINE__,video_st.next_pts);
-                        copyFrame_now();
+                        printf("copyFrame_now %s(%d)\n",__FILE__,__LINE__);
+                        copyFrame_now(video_st.next_pts);
                       //calc_edge(video_st.next_pts,video_st.enc->width, video_st.enc->height);
                         encode_video = !write_video_frame(oc, &video_st);
                     //  encode_audio = !write_audio_frame(oc, &audio_st);
                     } else {
-                        printf("else encode_audio %s(%d)\n",__FILE__,__LINE__);
                         encode_audio = !write_audio_frame(oc, &audio_st);
                     }
                     copyFrame_diffnow();
-//                  copyFrame();
 #endif
 //                  av_frame_unref(filt_frame);
                 }
@@ -1138,11 +1167,9 @@ end:
 #if 1
     av_frame_unref(filt_frame);
     av_frame_unref(frame);
-    av_packet_unref(packet);   
-//  free(Ybefore);free(Ubefore);free(Vbefore);
-//  free(Ydiffnow);free(Udiffnow);free(Vdiffnow);
+    av_packet_unref(packet);
 #endif
-//  avfilter_graph_free(&filter_graph);  //2025/4/1 by calc_matrix ?
+    avfilter_graph_free(&filter_graph);
     avcodec_free_context(&dec_ctx);
     avformat_close_input(&fmt_ctx);
     av_frame_free(&frame);

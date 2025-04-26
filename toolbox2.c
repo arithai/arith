@@ -356,16 +356,16 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
       printf("fill_yuv_image %s(%d)\n",__FILE__,__LINE__);
       for (y = 0; y < height; y++) {
         for (x = 0; x < width; x++) {
-          pict->data[0][y * pict->linesize[0] + x] = abs(filt_frame_before->data[0][y * filt_frame_before->linesize[0] + x]-
-                                                     filt_frame->data[0][y * filt_frame->linesize[0] + x]);
+          pict->data[0][y * pict->linesize[0] + x] = abs(Ybefore[y * Ylinesize + x]-
+                                                     filt_frame->data[0][y * Ylinesize + x]);
         }
       }  
       for (y = 0; y < height/2; y++) {
         for (x = 0; x < width/2; x++) {
-          pict->data[1][y * pict->linesize[1] + x] = abs(filt_before->data[1][y * filt_before->linesize[1] + x]-
-                                                     filt_frame->data[1][y * filt_frame->linesize[1] + x]);
-          pict->data[2][y * pict->linesize[2] + x] = abs(filt_before->data[2][y * filt_before->linesize[2] + x]-
-                                                     filt_frame->data[2][y * filt_frame->linesize[2] + x]);          
+          pict->data[1][y * pict->linesize[1] + x] = abs(Ubefore[y * Ulinesize + x]-
+                                                     filt_frame->data[1][y * Ulinesize + x]);
+          pict->data[2][y * pict->linesize[2] + x] = abs(Vbefore[y * Vlinesize + x]-
+                                                     filt_frame->data[2][y * Vlinesize + x]);          
         }
       }        
     }
@@ -384,7 +384,7 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
       }        
     }
 #endif
-#if 1
+#if 0
     if (frame_index>0) {
       printf("fill_yuv_image %s(%d)\n",__FILE__,__LINE__);
       for (y = 0; y < height; y++) {
@@ -418,16 +418,16 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
       }        
     }
 #endif
-#if 0
+#if 1
     /* Y */
     for (y = 0; y < height; y++)  {
         y2 = y/2;
         for (x = 0; x < width; x++) {
             x2 = x/2;
-#if 1       
-            pict->data[0][y * pict->linesize[0] + x] =   filt_frame->data[0][y *  filt_frame->linesize[0] + x];
-            pict->data[1][y2 * pict->linesize[1] + x2] = filt_frame->data[1][y2 * filt_frame->linesize[1] + x2];
-            pict->data[2][y2 * pict->linesize[2] + x2] = filt_frame->data[2][y2 * filt_frame->linesize[2] + x2];
+#if 0       
+            pict->data[0][y * pict->linesize[0] + x] =   filt_frame->data[0][y *  Ylinesize + x];
+            pict->data[1][y2 * pict->linesize[1] + x2] = filt_frame->data[1][y2 * Ulinesize + x2];
+            pict->data[2][y2 * pict->linesize[2] + x2] = filt_frame->data[2][y2 * Vlinesize + x2];
 #else
             pict->data[0][y * pict->linesize[0] + x] =   Ydiffnow[y *  Ylinesize + x];
             pict->data[1][y2 * pict->linesize[1] + x2] = Udiffnow[y2 * Ulinesize + x2];

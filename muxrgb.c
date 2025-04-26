@@ -110,6 +110,7 @@ static int write_frame(AVFormatContext *fmt_ctx, AVCodecContext *c,
         /* Write the compressed frame to the media file. */
         log_packet(fmt_ctx, pkt);
         ret = av_interleaved_write_frame(fmt_ctx, pkt);
+//      ret = av_write_frame(fmt_ctx, pkt);
         /* pkt is now blank (av_interleaved_write_frame() takes ownership of
          * its contents and resets pkt), so that no unreferencing is necessary.
          * This would be different if one used av_write_frame(). */
@@ -179,8 +180,8 @@ static void add_stream(OutputStream *ost, AVFormatContext *oc,
 
         c->bit_rate = 400000;
         /* Resolution must be a multiple of two. */
-        c->width    = 3840;
-        c->height   = 2160;
+        c->width    = 2160;
+        c->height   = 3840;
         /* timebase: This is the fundamental unit of time (in seconds) in terms
          * of which frame timestamps are represented. For fixed-fps content,
          * timebase should be 1/framerate and timestamp increments should be
@@ -451,23 +452,26 @@ static void open_video(AVFormatContext *oc, const AVCodec *codec,
 static void fill_yuv_image(AVFrame *pict, int frame_index,
                            int width, int height)
 {
-    int x, y, y0, y1, i;
+    int x, y, y0, y1, i,x2, y2;
  
     i = frame_index;
+    printf("frame_index=%3d\n",frame_index);
     i = i;
     /* RGB888 */
     for (y = 0; y < height ; y++) {
+        y2 =y /2;
         for (x = 0; x < width ; x++) {
-            if(x<700 && x>400) {
-              if(y<(int)(1200+(x-400)*4/3) && y>=1200) { //lower 
+            x2 = x /2;
+            if(x<(700+3*(frame_index%3)) && x>400) {
+              if(y<(int)(1200+(x-400)*4/3) && y>=1200) {      //lower 
                 pict->data[0][y * pict->linesize[0] +   x]   = 76;   //R
-                pict->data[1][y/2 * pict->linesize[1] + x/2] = 84;
-                pict->data[2][y/2 * pict->linesize[2] + x/2] = 255; 
+                pict->data[1][y2 * pict->linesize[1] + x2]   = 84;
+                pict->data[2][y2 * pict->linesize[2] + x2]   = 255; 
               }
               else if (y>(int)(1200-(x-400)*4/3) && y<1200) { //Upper
                 pict->data[0][y * pict->linesize[0] +   x]   = 76;   //R
-                pict->data[1][y/2 * pict->linesize[1] + x/2] = 84;
-                pict->data[2][y/2 * pict->linesize[2] + x/2] = 255; 
+                pict->data[1][y2 * pict->linesize[1] + x2]   = 84;
+                pict->data[2][y2 * pict->linesize[2] + x2]   = 255; 
               }
               else {
                 pict->data[0][y * pict->linesize[0] +   x]   = 149;  //G
@@ -476,25 +480,57 @@ static void fill_yuv_image(AVFrame *pict, int frame_index,
               }
             }  
             else if (x > 1600 || y > 1600) {
-              #if 0
-              pict->data[0][y * pict->linesize[0] +   x]   = 29;   //B
-              pict->data[1][y/2 * pict->linesize[1] + x/2] = 255; 
-              pict->data[2][y/2 * pict->linesize[2] + x/2] = 107;
-              #else
               pict->data[0][y * pict->linesize[0] +   x]   = 149;  //G
-              pict->data[1][y/2 * pict->linesize[1] + x/2] = 43;   
-              pict->data[2][y/2 * pict->linesize[2] + x/2] = 21;
-              #endif
+              pict->data[1][y2 * pict->linesize[1] + x2] = 43;   
+              pict->data[2][y2 * pict->linesize[2] + x2] = 21;
             }
             else if ( x > 800 && x < 1600 && y > 800 && y < 1600 ) {
-              pict->data[0][y * pict->linesize[0] +   x]   = 76;   //R
-              pict->data[1][y/2 * pict->linesize[1] + x/2] = 84;
-              pict->data[2][y/2 * pict->linesize[2] + x/2] = 255; 
+              pict->data[0][y * pict->linesize[0] +    x] = 76;   //R
+              pict->data[1][y2 * pict->linesize[1] + x2] = 84;
+              pict->data[2][y2 * pict->linesize[2] + x2] = 255; 
             }
             else {
+              pict->data[0][y * pict->linesize[0] +   x] = 149;  //G
+              pict->data[1][y2 * pict->linesize[1] + x2] = 43;   
+              pict->data[2][y2 * pict->linesize[2] + x2] = 21;
+            }              
+        }
+    }
+    for (y2 = 0; y2 < height/2 ; y2++) {
+        y =y2 * 2;
+        for (x2 = 0; x2 < width/2 ; x2++) {
+            x = x2 * 2;
+            if(x<700 && x>400) {
+              if(y<(int)(1200+(x-400)*4/3) && y>=1200) {      //lower 
+                pict->data[0][y * pict->linesize[0] +   x]   = 76;   //R
+                pict->data[1][y2 * pict->linesize[1] + x2]   = 84;
+                pict->data[2][y2 * pict->linesize[2] + x2]   = 255; 
+              }
+              else if (y>(int)(1200-(x-400)*4/3) && y<1200) { //Upper
+                pict->data[0][y * pict->linesize[0] +   x]   = 76;   //R
+                pict->data[1][y2 * pict->linesize[1] + x2]   = 84;
+                pict->data[2][y2 * pict->linesize[2] + x2]   = 255; 
+              }
+              else {
+                pict->data[0][y * pict->linesize[0] +   x]   = 149;  //G
+                pict->data[1][y2 * pict->linesize[1] + x2] = 43;   
+                pict->data[2][y2 * pict->linesize[2] + x2] = 21;
+              }
+            }  
+            else if (x > 1600 || y > 1600) {
               pict->data[0][y * pict->linesize[0] +   x]   = 149;  //G
-              pict->data[1][y/2 * pict->linesize[1] + x/2] = 43;   
-              pict->data[2][y/2 * pict->linesize[2] + x/2] = 21;
+              pict->data[1][y2 * pict->linesize[1] + x2] = 43;   
+              pict->data[2][y2 * pict->linesize[2] + x2] = 21;
+            }
+            else if ( x > 800 && x < 1600 && y > 800 && y < 1600 ) {
+              pict->data[0][y * pict->linesize[0] +    x] = 76;   //R
+              pict->data[1][y2 * pict->linesize[1] + x/2] = 84;
+              pict->data[2][y2 * pict->linesize[2] + x/2] = 255; 
+            }
+            else {
+              pict->data[0][y * pict->linesize[0] +   x] = 149;  //G
+              pict->data[1][y2 * pict->linesize[1] + x2] = 43;   
+              pict->data[2][y2 * pict->linesize[2] + x2] = 21;
             }              
         }
     }

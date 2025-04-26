@@ -880,43 +880,122 @@ void calc_histogram(AVFrame *pict, int frame_index,
   Xright=2*x;
   printf("Xmax=(%d,%d,%d)%d\n",Xmax,Xleft,Xright,maxv);
 }
-void calc_edge(int frame_index, int width, int height) { 
-  int x, y, i, x2, y2;                    
-  int Y[9],U[9],V[9],g;
-  i = frame_index;
-  printf("%s(%d),i=%d,(%d,%d)\n",__FILE__,__LINE__,i,width,height);
- //printf("fill_yuv_image %s(%d)\n",__FILE__,__LINE__);
-   for (y = 2; y < height-2; y++) {
-     y2 = y/2;
-     for (x = 2; x < width-2; x++) {
-       x2 = x/2;
-       g= abs(Ydiffnow[y *     Ylinesize + x]-
-              Ydiffnow[(y-1) * Ylinesize + (x-1)])+
-          abs(Ydiffnow[y *     Ylinesize + x]-
-              Ydiffnow[(y-1) * Ylinesize + x])+
-          abs(Ydiffnow[y *     Ylinesize + x]-         
-              Ydiffnow[(y-1) * Ylinesize + (x+1)])+
-          abs(Ydiffnow[y *     Ylinesize + x]-              
-              Ydiffnow[y *     Ylinesize + (x-1)])+
-          abs(Ydiffnow[y *     Ylinesize + x]-              
-              Ydiffnow[y *     Ylinesize + (x+1)])+
-          abs(Ydiffnow[y *     Ylinesize + x]-              
-              Ydiffnow[(y+1) * Ylinesize + (x-1)])+
-          abs(Ydiffnow[y *     Ylinesize + x]-              
-              Ydiffnow[(y+1) * Ylinesize + x])+
-          abs(Ydiffnow[y *     Ylinesize + x]-              
-              Ydiffnow[(y+1) * Ylinesize + (x+1)]);
-       if(g>80*8)
-       {
-          Ydiffnow[y *  Ylinesize + x]  = BLACKY;                
-          Udiffnow[y2 * Ulinesize + x2] = BLACKU;
-          Vdiffnow[y2 * Vlinesize + x2] = BLACKV;
-        }  
-        else {
-          Ydiffnow[y *  Ylinesize + x]  = WHITEY;                
-          Udiffnow[y2 * Ulinesize + x2] = WHITEU;
-          Vdiffnow[y2 * Vlinesize + x2] = WHITEV;
-        }  
-     }
-   }  
- }
+
+extern int r[2][2],g[2][2],b[2][2];
+extern int re,ge,be,ra,ga,ba;
+#define a(v) (v>64? 255:0)
+void calc_matrix(int x,int y) {
+  int x2,y2,x0,y0,Y,U,V,r11,g11,b11,r11a,g11a,b11a;
+  x0 = x-1;if(x0<0) x0=0;
+    
+  y0 = y-1;if(y0<0) y0=0;      
+  x2 = x0/2;
+  y2 = y0/2;
+  Y=filt_frame->data[0][y0* Ylinesize + x0];
+  U=filt_frame->data[1][y2* Ulinesize + x2];
+  V=filt_frame->data[2][y2* Vlinesize + x2];
+  r[0][0]=YUV2R(Y,U,V);
+  g[0][0]=YUV2G(Y,U,V);
+  b[0][0]=YUV2B(Y,U,V);
+  y0 = y;      
+  y2 = y0/2;      
+  Y=filt_frame->data[0][y0* Ylinesize + x0];
+  U=filt_frame->data[1][y2* Ulinesize + x2];
+  V=filt_frame->data[2][y2* Vlinesize + x2];
+  r[0][1]=YUV2R(Y,U,V);
+  g[0][1]=YUV2G(Y,U,V);
+  b[0][1]=YUV2B(Y,U,V);
+
+  y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
+  y2 = y0/2;      
+  Y=filt_frame->data[0][y0* Ylinesize + x0];
+  U=filt_frame->data[1][y2* Ulinesize + x2];
+  V=filt_frame->data[2][y2* Vlinesize + x2];
+  r[0][2]=YUV2R(Y,U,V);
+  g[0][2]=YUV2G(Y,U,V);
+  b[0][2]=YUV2B(Y,U,V);
+
+  x0 = x;
+    
+  y0 = y-1;if(y0<0) y0=0;      
+  x2 = x0/2;
+  y2 = y0/2;      
+  Y=filt_frame->data[0][y0* Ylinesize + x0];
+  U=filt_frame->data[1][y2* Ulinesize + x2];
+  V=filt_frame->data[2][y2* Vlinesize + x2];
+  r[1][0]=YUV2R(Y,U,V);
+  g[1][0]=YUV2G(Y,U,V);
+  b[1][0]=YUV2B(Y,U,V);
+  y0 = y;      
+  y2 = y0/2;      
+  Y=filt_frame->data[0][y0* Ylinesize + x0];
+  U=filt_frame->data[1][y2* Ulinesize + x2];
+  V=filt_frame->data[2][y2* Vlinesize + x2];
+  r[1][1]=YUV2R(Y,U,V);
+  g[1][1]=YUV2G(Y,U,V);
+  b[1][1]=YUV2B(Y,U,V);
+
+  y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
+  y2 = y0/2;      
+  Y=filt_frame->data[0][y0* Ylinesize + x0];
+  U=filt_frame->data[1][y2* Ulinesize + x2];
+  V=filt_frame->data[2][y2* Vlinesize + x2];
+  r[1][2]=YUV2R(Y,U,V);
+  g[1][2]=YUV2G(Y,U,V);
+  b[1][2]=YUV2B(Y,U,V);
+
+  x0 = x+1;if(x0==filt_frame->width) x0=filt_frame->width-1; 
+    
+  y0 = y-1;if(y0<0) y0=0;      
+  x2 = x0/2;
+  y2 = y0/2;      
+  Y=filt_frame->data[0][y0* Ylinesize + x0];
+  U=filt_frame->data[1][y2* Ulinesize + x2];
+  V=filt_frame->data[2][y2* Vlinesize + x2];
+  r[2][0]=YUV2R(Y,U,V);
+  g[2][0]=YUV2G(Y,U,V);
+  b[2][0]=YUV2B(Y,U,V);
+  y0 = y;      
+  y2 = y0/2;      
+  Y=filt_frame->data[0][y0* Ylinesize + x0];
+  U=filt_frame->data[1][y2* Ulinesize + x2];
+  V=filt_frame->data[2][y2* Vlinesize + x2];
+  r[2][1]=YUV2R(Y,U,V);
+  g[2][1]=YUV2G(Y,U,V);
+  b[2][1]=YUV2B(Y,U,V);
+
+  y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
+  y2 = y0/2;      
+  Y=filt_frame->data[0][y0* Ylinesize + x0];
+  U=filt_frame->data[1][y2* Ulinesize + x2];
+  V=filt_frame->data[2][y2* Vlinesize + x2];
+  r[2][2]=YUV2R(Y,U,V);
+  g[2][2]=YUV2G(Y,U,V);
+  b[2][2]=YUV2B(Y,U,V);
+  
+  r11=r[1][1];g11=g[1][1];b11=b[1][1];
+  re=abs(r11-r[0][0])+abs(r11-r[0][1])+abs(r11-r[0][2])+
+     abs(r11-r[1][0])                 +abs(r11-r[1][2])+
+     abs(r11-r[2][0])+abs(r11-r[2][1])+abs(r11-r[2][2]);
+  g11=g[1][1];
+  ge=abs(g11-g[0][0])+abs(g11-g[0][1])+abs(g11-g[0][2])+
+     abs(g11-g[1][0])                 +abs(g11-g[1][2])+
+     abs(g11-g[2][0])+abs(g11-g[2][1])+abs(g11-g[2][2]);
+  b11=b[1][1];
+  be=abs(b11-b[0][0])+abs(b11-b[0][1])+abs(b11-b[0][2])+
+     abs(b11-b[1][0])                 +abs(b11-b[1][2])+
+     abs(b11-b[2][0])+abs(b11-b[2][1])+abs(b11-b[2][2]);  
+
+  r11a=a(r[1][1]); 
+  ra=abs(r11a-a(r[0][0]))+abs(r11a-a(r[0][1]))+abs(r11a-a(r[0][2]))+
+     abs(r11a-a(r[1][0]))                     +abs(r11a-a(r[1][2]))+
+     abs(r11a-a(r[2][0]))+abs(r11a-a(r[2][1]))+abs(r11a-a(r[2][2]));
+  g11a=a(g[1][1]); 
+  ga=abs(g11a-a(g[0][0]))+abs(g11a-a(g[0][1]))+abs(g11a-a(g[0][2]))+
+     abs(g11a-a(g[1][0]))                     +abs(g11a-a(g[1][2]))+
+     abs(g11a-a(g[2][0]))+abs(g11a-a(g[2][1]))+abs(g11a-a(g[2][2]));
+  b11a=a(b[1][1]); 
+  ba=abs(b11a-a(b[0][0]))+abs(b11a-a(b[0][1]))+abs(b11a-a(b[0][2]))+
+     abs(b11a-a(b[1][0]))                     +abs(b11a-a(b[1][2]))+
+     abs(b11a-a(b[2][0]))+abs(b11a-a(b[2][1]))+abs(b11a-a(b[2][2]));
+}
