@@ -183,6 +183,8 @@
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=big5' />
 <meta http-equiv='expires' content='-1'>
+<script async src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5461330248394994'
+     crossorigin='anonymous'></script>
 <title>".$IDT[$IDii].",arithai.com,2025
 </title>
 </head>
