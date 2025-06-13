@@ -175,6 +175,7 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
     int x, y, i, g;
     int x0, y0, x2, y2;
     int x30,y30,xs60,ys60;
+    int Y0,U0,V0,Y1,U1,V1,G0,G1;
 #if 0
     int Xmid=(Xleft+Xright)/2;
     int Ymid=(Yup+Ydown)/2;
@@ -386,19 +387,32 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
 #endif
 #if 0
     if (frame_index>0) {
-      printf("fill_yuv_image %s(%d)\n",__FILE__,__LINE__);
+      printf("fill_yuv_image %s(%d),%3d,(%4d,%4d,%4d)\n",__FILE__,__LINE__,frame_index,
+             Ylinesize,Ulinesize,Vlinesize);
       for (y = 0; y < height; y++) {
         y2 = y/2;
         for (x = 0; x < width; x++) {
           x2 = x/2;
           g = abs(Ybefore[y * Ylinesize + x]-Ydiffnow[y * Ylinesize + x]);
-          if(g >250) {
-            pict->data[0][y * pict->linesize[0] + x] = BLACKY;                
+          
+          Y0 = Ybefore[y *   Ylinesize + x];
+          U0 = Ubefore[y2 *  Ulinesize + x2];
+          V0 = Vbefore[y2 *  Vlinesize + x2];
+          Y1 = Ydiffnow[y *  Ylinesize + x];
+          U1 = Udiffnow[y2 * Ulinesize + x2];
+          V1 = Vdiffnow[y2 * Vlinesize + x2];
+          G0 = YUV2G(Y0,U0,V0); if(G0<64) G0=0; else G0=255;
+          G1 = YUV2G(Y1,U1,V1); if(G1<64) G1=0; else G1=255;
+          
+          g = abs(G0-G1);
+          
+          if(g > 250) {
+            pict->data[0][y *  pict->linesize[0] + x]  = BLACKY;                
             pict->data[1][y2 * pict->linesize[1] + x2] = BLACKU;
             pict->data[2][y2 * pict->linesize[2] + x2] = BLACKV;
           }  
           else {
-            pict->data[0][y * pict->linesize[0] + x] = WHITEY;                
+            pict->data[0][y *  pict->linesize[0] + x]  = WHITEY;                
             pict->data[1][y2 * pict->linesize[1] + x2] = WHITEU;
             pict->data[2][y2 * pict->linesize[2] + x2] = WHITEV;
           }  
@@ -406,14 +420,16 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
       }  
     }
     else {
-      printf("fill_yuv_image %s(%d)\n",__FILE__,__LINE__);
+      printf("fill_yuv_image %s(%d),%3d\n",__FILE__,__LINE__,frame_index);
       for (y = 0; y < height; y++) {
+     //   printf("fill_yuv_image %s(%d) (%4d,%4d),%4d,%4d,%4d\n",__FILE__,__LINE__,x,y,
+     //          Ylinesize,Ulinesize,Vlinesize);
         y2 = y/2;
         for (x = 0; x < width; x++) {
           x2 = x/2;
-          pict->data[0][y *  Ylinesize + x]  = Ydiffnow[y *  Ylinesize + x];
-          pict->data[1][y2 * Ulinesize + x2] = Udiffnow[y2 * Ulinesize + x2];
-          pict->data[2][y2 * Vlinesize + x2] = Vdiffnow[y2 * Vlinesize + x2];          
+          pict->data[0][y *  pict->linesize[0] + x]  = Ydiffnow[y *  Ylinesize + x];
+          pict->data[1][y2 * pict->linesize[1] + x2] = Udiffnow[y2 * Ulinesize + x2];
+          pict->data[2][y2 * pict->linesize[2] + x2] = Vdiffnow[y2 * Vlinesize + x2];          
         }
       }        
     }
@@ -425,11 +441,11 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
         for (x = 0; x < width; x++) {
             x2 = x/2;
 #if 0       
-            pict->data[0][y * pict->linesize[0] + x] =   filt_frame->data[0][y *  Ylinesize + x];
-            pict->data[1][y2 * pict->linesize[1] + x2] = filt_frame->data[1][y2 * Ulinesize + x2];
-            pict->data[2][y2 * pict->linesize[2] + x2] = filt_frame->data[2][y2 * Vlinesize + x2];
+            pict->data[0][pict->linesize[0] + x]       = filt_frame->data[0][y *  filt_frame->linesize[0] + x];
+            pict->data[1][pict->linesize[1] + x2]      = filt_frame->data[1][y2 * filt_frame->linesize[1] + x2];
+            pict->data[2][pict->linesize[2] + x2]      = filt_frame->data[2][y2 * filt_frame->linesize[2] + x2];
 #else
-            pict->data[0][y * pict->linesize[0] + x] =   Ydiffnow[y *  Ylinesize + x];
+            pict->data[0][y *  pict->linesize[0] + x]  = Ydiffnow[y *  Ylinesize + x];
             pict->data[1][y2 * pict->linesize[1] + x2] = Udiffnow[y2 * Ulinesize + x2];
             pict->data[2][y2 * pict->linesize[2] + x2] = Vdiffnow[y2 * Vlinesize + x2];
 #endif

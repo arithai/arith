@@ -622,10 +622,14 @@ void copyFrame_now() {
     frameHeight   = filt_frame->height;
     Ylinesize =  filt_frame->linesize[0];
     Ulinesize =  filt_frame->linesize[1];
-    Vlinesize =  filt_frame->linesize[2];    
+    Vlinesize =  filt_frame->linesize[2];
     Ydiffnow = (unsigned char *)malloc(Ylinesize*frameHeight);
     Udiffnow = (unsigned char *)malloc(Ulinesize*frameHeight);
     Vdiffnow = (unsigned char *)malloc(Vlinesize*frameHeight);
+    printf("%s(%d),(%4d,%4d),(%4d,%4d,%4d)\n",__FILE__,__LINE__,
+           frameWidth,frameHeight,
+           Ylinesize,Ulinesize,Vlinesize);
+           
   }
 #if 1
   for (y = 0; y < filt_frame->height; y++) {
@@ -634,8 +638,9 @@ void copyFrame_now() {
       calc_matrix(x,y);     
       x2 = x/2;
 //    if(ga > 128 && ba > 32) {
-      if(ga > 128) {
+//    if(ga > 128) {
 //    if(ge > 16 && ba > 16) {
+      if(ge > 16) {
 //      printf("(%5d,%5d,%5d)\n",re,ge,be);
 //    if(r[1][1]<128  && g[1][1] > 128) {
         Ydiffnow[y * Ylinesize + x]  = BLACKY;
@@ -661,7 +666,7 @@ void copyFrame() {
     frameHeight   = filt_frame->height;
     Ylinesize =  filt_frame->linesize[0];
     Ulinesize =  filt_frame->linesize[1];
-    Vlinesize =  filt_frame->linesize[2];    
+    Vlinesize =  filt_frame->linesize[2];   
     Ybefore = (unsigned char *)malloc(Ylinesize*frameHeight);
     Ubefore = (unsigned char *)malloc(Ulinesize*frameHeight);
     Vbefore = (unsigned char *)malloc(Vlinesize*frameHeight);
@@ -670,9 +675,9 @@ void copyFrame() {
     y2 = y/2;
     for (x = 0; x < filt_frame->width; x++) {
       x2 = x/2;
-      Ybefore[y  * Ylinesize + x] =  filt_frame->data[0][y * Ylinesize + x];
-      Ubefore[y2 * Ulinesize + x2] = filt_frame->data[1][y2* Ulinesize + x2];
-      Vbefore[y2 * Vlinesize + x2] = filt_frame->data[2][y2* Vlinesize + x2];
+      Ybefore[y  * Ylinesize + x] =  filt_frame->data[0][y * filt_frame->linesize[0] + x];
+      Ubefore[y2 * Ulinesize + x2] = filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
+      Vbefore[y2 * Vlinesize + x2] = filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
     }  
   }    
 }
@@ -684,7 +689,7 @@ void copyFrame_diffnow() {
     frameHeight   = filt_frame->height;
     Ylinesize =  filt_frame->linesize[0];
     Ulinesize =  filt_frame->linesize[1];
-    Vlinesize =  filt_frame->linesize[2];    
+    Vlinesize =  filt_frame->linesize[2];   
     Ybefore = (unsigned char *)malloc(Ylinesize*frameHeight);
     Ubefore = (unsigned char *)malloc(Ulinesize*frameHeight);
     Vbefore = (unsigned char *)malloc(Vlinesize*frameHeight);

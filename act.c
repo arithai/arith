@@ -312,8 +312,8 @@ bool marginalLine(int x,int y) {
     y0=y-i;
     if(x0>0 && y0>0) { //v change!
       diff=abs(
-        filt_frame->data[2][(y0-1) * filt_frame->linesize[2] + x0    ]+
-        filt_frame->data[2][     y0* filt_frame->linesize[2] + (x0-1)]-
+        filt_frame->data[2][(y0-1) * filt_frame->linesize[0] + x0    ]+
+        filt_frame->data[2][     y0* filt_frame->linesize[1] + (x0-1)]-
       2*filt_frame->data[2][     y0* filt_frame->linesize[2] + x0    ]);
     //printf("%s(%d) diff=%d\n",__FILE__,__LINE__,diff);
       if(diff > MAX_JUMP_LINE) 
@@ -891,26 +891,26 @@ void calc_matrix(int x,int y) {
   y0 = y-1;if(y0<0) y0=0;      
   x2 = x0/2;
   y2 = y0/2;
-  Y=filt_frame->data[0][y0* Ylinesize + x0];
-  U=filt_frame->data[1][y2* Ulinesize + x2];
-  V=filt_frame->data[2][y2* Vlinesize + x2];
+  Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
+  U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
+  V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
   r[0][0]=YUV2R(Y,U,V);
   g[0][0]=YUV2G(Y,U,V);
   b[0][0]=YUV2B(Y,U,V);
   y0 = y;      
   y2 = y0/2;      
-  Y=filt_frame->data[0][y0* Ylinesize + x0];
-  U=filt_frame->data[1][y2* Ulinesize + x2];
-  V=filt_frame->data[2][y2* Vlinesize + x2];
+  Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
+  U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
+  V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
   r[0][1]=YUV2R(Y,U,V);
   g[0][1]=YUV2G(Y,U,V);
   b[0][1]=YUV2B(Y,U,V);
 
   y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
   y2 = y0/2;      
-  Y=filt_frame->data[0][y0* Ylinesize + x0];
-  U=filt_frame->data[1][y2* Ulinesize + x2];
-  V=filt_frame->data[2][y2* Vlinesize + x2];
+  Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
+  U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
+  V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
   r[0][2]=YUV2R(Y,U,V);
   g[0][2]=YUV2G(Y,U,V);
   b[0][2]=YUV2B(Y,U,V);
@@ -920,26 +920,26 @@ void calc_matrix(int x,int y) {
   y0 = y-1;if(y0<0) y0=0;      
   x2 = x0/2;
   y2 = y0/2;      
-  Y=filt_frame->data[0][y0* Ylinesize + x0];
-  U=filt_frame->data[1][y2* Ulinesize + x2];
-  V=filt_frame->data[2][y2* Vlinesize + x2];
+  Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
+  U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
+  V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
   r[1][0]=YUV2R(Y,U,V);
   g[1][0]=YUV2G(Y,U,V);
   b[1][0]=YUV2B(Y,U,V);
   y0 = y;      
   y2 = y0/2;      
-  Y=filt_frame->data[0][y0* Ylinesize + x0];
-  U=filt_frame->data[1][y2* Ulinesize + x2];
-  V=filt_frame->data[2][y2* Vlinesize + x2];
+  Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
+  U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
+  V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
   r[1][1]=YUV2R(Y,U,V);
   g[1][1]=YUV2G(Y,U,V);
   b[1][1]=YUV2B(Y,U,V);
 
   y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
   y2 = y0/2;      
-  Y=filt_frame->data[0][y0* Ylinesize + x0];
-  U=filt_frame->data[1][y2* Ulinesize + x2];
-  V=filt_frame->data[2][y2* Vlinesize + x2];
+  Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
+  U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
+  V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
   r[1][2]=YUV2R(Y,U,V);
   g[1][2]=YUV2G(Y,U,V);
   b[1][2]=YUV2B(Y,U,V);
@@ -949,26 +949,26 @@ void calc_matrix(int x,int y) {
   y0 = y-1;if(y0<0) y0=0;      
   x2 = x0/2;
   y2 = y0/2;      
-  Y=filt_frame->data[0][y0* Ylinesize + x0];
-  U=filt_frame->data[1][y2* Ulinesize + x2];
-  V=filt_frame->data[2][y2* Vlinesize + x2];
+  Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
+  U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
+  V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
   r[2][0]=YUV2R(Y,U,V);
   g[2][0]=YUV2G(Y,U,V);
   b[2][0]=YUV2B(Y,U,V);
   y0 = y;      
   y2 = y0/2;      
-  Y=filt_frame->data[0][y0* Ylinesize + x0];
-  U=filt_frame->data[1][y2* Ulinesize + x2];
-  V=filt_frame->data[2][y2* Vlinesize + x2];
+  Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
+  U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
+  V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
   r[2][1]=YUV2R(Y,U,V);
   g[2][1]=YUV2G(Y,U,V);
   b[2][1]=YUV2B(Y,U,V);
 
   y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
   y2 = y0/2;      
-  Y=filt_frame->data[0][y0* Ylinesize + x0];
-  U=filt_frame->data[1][y2* Ulinesize + x2];
-  V=filt_frame->data[2][y2* Vlinesize + x2];
+  Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
+  U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
+  V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
   r[2][2]=YUV2R(Y,U,V);
   g[2][2]=YUV2G(Y,U,V);
   b[2][2]=YUV2B(Y,U,V);
