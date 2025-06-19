@@ -1,6 +1,5 @@
 //act.c ArithAI Yang 2025.01.17
 //Purpose:Algebraic/Arithmetics/Artificial/Algorithmic Catgory Theory
-//arithai
 //§ä­±,§ä½u AVFrame *filt_frame; frame_index 
 #define _XOPEN_SOURCE 600 /* for usleep */
 #include <unistd.h>
@@ -163,7 +162,7 @@ void ptGetFirst() {
 #define STREAM_FRAME_RATE 25 /* 25 images/s */
 #define STREAM_PIX_FMT    AV_PIX_FMT_YUV420P /* default pix_fmt */
 #define SCALE_FLAGS SWS_BICUBIC
-// a wrapper aroUn[d a single output AVStream
+// a wrapper around a single output AVStream
 typedef struct OutputStream {
     AVStream *st;
     AVCodecContext *enc;
@@ -888,65 +887,41 @@ void calc_histogram(AVFrame *pict, int frame_index,
   printf("Xmax=(%d,%d,%d)%d\n",Xmax,Xleft,Xright,maxv);
 }
 
-//n:now,b:before
-extern int Rn[2][2],Gn[2][2],Bn[2][2];
-extern int Yn[2][2],Un[2][2],Vn[2][2];
-extern int Rb[2][2],Gb[2][2],Bb[2][2];
-extern int Yb[2][2],Ub[2][2],Vb[2][2];
+extern int r[2][2],g[2][2],b[2][2];
 extern int re,ge,be,ra,ga,ba;
-#define a(v) (v>64? 255:0)
+#define a(v) (v>64? 255:0)   
 void calc_matrix(int x,int y) {
   int x2,y2,x0,y0,Y,U,V,r11,g11,b11,r11a,g11a,b11a;
-  int i,j;
-//shift time
-      printf("%s(%d),%4d,%4d\n",__FILE__,__LINE__,y,x);
-
-  for(i=0;i<3;i++) {
-    for(j=0;j<3;j++) {
-      Yb[i][j]=Yn[i][j];Ub[i][j]=Un[i][j];Vb[i][j]=Vn[i][j];
-      Rb[i][j]=Rn[i][j];Gb[i][j]=Gn[i][j];Bb[i][j]=Bn[i][j];
-    }
-  }  
-      printf("%s(%d),%4d,%4d\n",__FILE__,__LINE__,y,x);
-                 
   x0 = x-1;if(x0<0) x0=0;
     
   y0 = y-1;if(y0<0) y0=0;      
   x2 = x0/2;
   y2 = y0/2;
-      printf("%s(%d),%4d,%4d,%4d,%4d,%4d,%4d,%X\n",__FILE__,__LINE__,y,x,
-      y0,x0,y2,x2,filt_frame->linesize);
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
-      printf("%s(%d),%4d,%4d,%4d,%4d,%4d,%4d\n",__FILE__,__LINE__,y,x,y0,x0,y2,x2);
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-      printf("%s(%d),%4d,%4d\n",__FILE__,__LINE__,y,x);
-  Yn[0][0]=Y;Un[0][0]=U;Vn[0][0]=V;
-  Rn[0][0]=YUV2R(Y,U,V);
-  Gn[0][0]=YUV2G(Y,U,V);
-  Bn[0][0]=YUV2B(Y,U,V);
-      printf("%s(%d),%4d,%4d\n",__FILE__,__LINE__,y,x);
-      
+  r[0][0]=YUV2R(Y,U,V);
+  g[0][0]=YUV2G(Y,U,V);
+  b[0][0]=YUV2B(Y,U,V);  
+  
   y0 = y;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  Yn[0][1]=Y;Un[0][1]=U;Vn[0][1]=V;
-  Rn[0][1]=YUV2R(Y,U,V);
-  Gn[0][1]=YUV2G(Y,U,V);
-  Bn[0][1]=YUV2B(Y,U,V);
-
+  r[0][1]=YUV2R(Y,U,V);
+  g[0][1]=YUV2G(Y,U,V);
+  b[0][1]=YUV2B(Y,U,V);  
+  
   y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  Yn[0][2]=Y;Un[0][2]=U;Vn[0][2]=V;
-  Rn[0][2]=YUV2R(Y,U,V);
-  Gn[0][2]=YUV2G(Y,U,V);
-  Bn[0][2]=YUV2B(Y,U,V);
-
+  r[0][2]=YUV2R(Y,U,V);
+  g[0][2]=YUV2G(Y,U,V);
+  b[0][2]=YUV2B(Y,U,V);
+             
   x0 = x;
     
   y0 = y-1;if(y0<0) y0=0;      
@@ -955,36 +930,31 @@ void calc_matrix(int x,int y) {
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  Yn[1][0]=Y;Un[1][0]=U;Vn[1][0]=V;
-  Rn[1][0]=YUV2R(Y,U,V);
-  Gn[1][0]=YUV2G(Y,U,V);
-  Bn[1][0]=YUV2B(Y,U,V);
-
-      printf("%s(%d),%4d,%4d\n",__FILE__,__LINE__,y,x);
+  r[1][0]=YUV2R(Y,U,V);
+  g[1][0]=YUV2G(Y,U,V);
+  b[1][0]=YUV2B(Y,U,V);
   
   y0 = y;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  Yn[1][1]=Y;Un[1][1]=U;Vn[1][1]=V;
-  Rn[1][1]=YUV2R(Y,U,V);
-  Gn[1][1]=YUV2G(Y,U,V);
-  Bn[1][1]=YUV2B(Y,U,V);
+  r[1][1]=YUV2R(Y,U,V);
+  g[1][1]=YUV2G(Y,U,V);
+  b[1][1]=YUV2B(Y,U,V);
 
-  Rnow[y*filt_frame->linesize[0]+x]=Rn[1][1];
-  Gnow[y*filt_frame->linesize[0]+x]=Gn[1][1];
-  Bnow[y*filt_frame->linesize[0]+x]=Bn[1][1];
+  Rnow[y*filt_frame->linesize[0]+x]=r[1][1];
+  Gnow[y*filt_frame->linesize[0]+x]=g[1][1];
+  Bnow[y*filt_frame->linesize[0]+x]=b[1][1];
 
   y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  Yn[1][2]=Y;Un[1][2]=U;Vn[1][2]=V;
-  Rn[1][2]=YUV2R(Y,U,V);
-  Gn[1][2]=YUV2G(Y,U,V);
-  Bn[1][2]=YUV2B(Y,U,V);
+  r[1][2]=YUV2R(Y,U,V);
+  g[1][2]=YUV2G(Y,U,V);
+  b[1][2]=YUV2B(Y,U,V);
 
   x0 = x+1;if(x0==filt_frame->width) x0=filt_frame->width-1; 
     
@@ -994,57 +964,51 @@ void calc_matrix(int x,int y) {
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  Yn[2][0]=Y;Un[2][0]=U;Vn[2][0]=V;
-  Rn[2][0]=YUV2R(Y,U,V);
-  Gn[2][0]=YUV2G(Y,U,V);
-  Bn[2][0]=YUV2B(Y,U,V);
+  r[2][0]=YUV2R(Y,U,V);
+  g[2][0]=YUV2G(Y,U,V);
+  b[2][0]=YUV2B(Y,U,V);
   
   y0 = y;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  Yn[2][1]=Y;Un[2][1]=U;Vn[2][1]=V;
-  Rn[2][1]=YUV2R(Y,U,V);
-  Gn[2][1]=YUV2G(Y,U,V);
-  Bn[2][1]=YUV2B(Y,U,V);
+  r[2][1]=YUV2R(Y,U,V);
+  g[2][1]=YUV2G(Y,U,V);
+  b[2][1]=YUV2B(Y,U,V);
 
   y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  Yn[2][2]=Y;Un[2][2]=U;Vn[2][2]=V;
-  Rn[2][2]=YUV2R(Y,U,V);
-  Gn[2][2]=YUV2G(Y,U,V);
-  Bn[2][2]=YUV2B(Y,U,V);
+  r[2][2]=YUV2R(Y,U,V);
+  g[2][2]=YUV2G(Y,U,V);
+  b[2][2]=YUV2B(Y,U,V);
   
-  r11=Rn[1][1];g11=Gn[1][1];b11=Bn[1][1];
-  re=abs(r11-Rn[0][0])+abs(r11-Rn[0][1])+abs(r11-Rn[0][2])+
-     abs(r11-Rn[1][0])                  +abs(r11-Rn[1][2])+
-     abs(r11-Rn[2][0])+abs(r11-Rn[2][1])+abs(r11-Rn[2][2]);
-  g11=Gn[1][1];
-  ge=abs(g11-Gn[0][0])+abs(g11-Gn[0][1])+abs(g11-Gn[0][2])+
-     abs(g11-Gn[1][0])                  +abs(g11-Gn[1][2])+
-     abs(g11-Gn[2][0])+abs(g11-Gn[2][1])+abs(g11-Gn[2][2]);
-  b11=Bn[1][1];
-  be=abs(b11-Bn[0][0])+abs(b11-Bn[0][1])+abs(b11-Bn[0][2])+
-     abs(b11-Bn[1][0])                  +abs(b11-Bn[1][2])+
-     abs(b11-Bn[2][0])+abs(b11-Bn[2][1])+abs(b11-Bn[2][2]);  
+  r11=r[1][1];g11=g[1][1];b11=b[1][1];
+  re=abs(r11-r[0][0])+abs(r11-r[0][1])+abs(r11-r[0][2])+
+     abs(r11-r[1][0])                 +abs(r11-r[1][2])+
+     abs(r11-r[2][0])+abs(r11-r[2][1])+abs(r11-r[2][2]);
+  g11=g[1][1];
+  ge=abs(g11-g[0][0])+abs(g11-g[0][1])+abs(g11-g[0][2])+
+     abs(g11-g[1][0])                 +abs(g11-g[1][2])+
+     abs(g11-g[2][0])+abs(g11-g[2][1])+abs(g11-g[2][2]);
+  b11=b[1][1];
+  be=abs(b11-b[0][0])+abs(b11-b[0][1])+abs(b11-b[0][2])+
+     abs(b11-b[1][0])                 +abs(b11-b[1][2])+
+     abs(b11-b[2][0])+abs(b11-b[2][1])+abs(b11-b[2][2]);  
 
-           printf("%s(%d),%4d,%4d\n",__FILE__,__LINE__,y,x);
-
-
-  r11a=a(Rn[1][1]); 
-  ra=abs(r11a-a(Rn[0][0]))+abs(r11a-a(Rn[0][1]))+abs(r11a-a(Rn[0][2]))+
-     abs(r11a-a(Rn[1][0]))                      +abs(r11a-a(Rn[1][2]))+
-     abs(r11a-a(Rn[2][0]))+abs(r11a-a(Rn[2][1]))+abs(r11a-a(Rn[2][2]));
-  g11a=a(Gn[1][1]); 
-  ga=abs(g11a-a(Gn[0][0]))+abs(g11a-a(Gn[0][1]))+abs(g11a-a(Gn[0][2]))+
-     abs(g11a-a(Gn[1][0]))                      +abs(g11a-a(Gn[1][2]))+
-     abs(g11a-a(Gn[2][0]))+abs(g11a-a(Gn[2][1]))+abs(g11a-a(Gn[2][2]));
-  b11a=a(Bn[1][1]); 
-  ba=abs(b11a-a(Bn[0][0]))+abs(b11a-a(Bn[0][1]))+abs(b11a-a(Bn[0][2]))+
-     abs(b11a-a(Bn[1][0]))                      +abs(b11a-a(Bn[1][2]))+
-     abs(b11a-a(Bn[2][0]))+abs(b11a-a(Bn[2][1]))+abs(b11a-a(Bn[2][2]));
+  r11a=a(r[1][1]); 
+  ra=abs(r11a-a(r[0][0]))+abs(r11a-a(r[0][1]))+abs(r11a-a(r[0][2]))+
+     abs(r11a-a(r[1][0]))                     +abs(r11a-a(r[1][2]))+
+     abs(r11a-a(r[2][0]))+abs(r11a-a(r[2][1]))+abs(r11a-a(r[2][2]));
+  g11a=a(g[1][1]); 
+  ga=abs(g11a-a(g[0][0]))+abs(g11a-a(g[0][1]))+abs(g11a-a(g[0][2]))+
+     abs(g11a-a(g[1][0]))                     +abs(g11a-a(g[1][2]))+
+     abs(g11a-a(g[2][0]))+abs(g11a-a(g[2][1]))+abs(g11a-a(g[2][2]));
+  b11a=a(b[1][1]); 
+  ba=abs(b11a-a(b[0][0]))+abs(b11a-a(b[0][1]))+abs(b11a-a(b[0][2]))+
+     abs(b11a-a(b[1][0]))                     +abs(b11a-a(b[1][2]))+
+     abs(b11a-a(b[2][0]))+abs(b11a-a(b[2][1]))+abs(b11a-a(b[2][2]));
 }

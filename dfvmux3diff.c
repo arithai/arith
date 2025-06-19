@@ -134,6 +134,7 @@ unsigned char *Vbefore=NULL;
 unsigned char *Ydiffnow=NULL;
 unsigned char *Udiffnow=NULL;
 unsigned char *Vdiffnow=NULL;
+int Ylinesize,Ulinesize,Vlinesize;
 unsigned char *Rbefore=NULL;
 unsigned char *Gbefore=NULL;
 unsigned char *Bbefore=NULL;
@@ -141,9 +142,7 @@ unsigned char *Rnow=NULL;
 unsigned char *Gnow=NULL;
 unsigned char *Bnow=NULL;
 
-int Ylinesize,Ulinesize,Vlinesize;
-
-// a wrapper aroUn[d a single output AVStream
+// a wrapper around a single output AVStream
 typedef struct OutputStream {
     AVStream *st;
     AVCodecContext *enc;
@@ -199,7 +198,7 @@ static int write_frame(AVFormatContext *fmt_ctx, AVCodecContext *c,
         ret = av_interleaved_write_frame(fmt_ctx, pkt);
 //      ret = av_write_frame(fmt_ctx, pkt);
         /* pkt is now blank (av_interleaved_write_frame() takes ownership of
-         * its contents and resets pkt), so that no Un[referencing is necessary.
+         * its contents and resets pkt), so that no unreferencing is necessary.
          * This would be different if one used av_write_frame(). */
         if (ret < 0) {
             fprintf(stderr, "Error while writing output packet: %s\n", av_err2str(ret));
@@ -273,7 +272,7 @@ static void add_stream(OutputStream *ost, AVFormatContext *oc,
         c->width    = 352;
         c->height   = 288;
         #endif
-        /* timebase: This is the fUn[damental Un[it of time (in seconds) in terms
+        /* timebase: This is the fundamental unit of time (in seconds) in terms
          * of which frame timestamps are represented. For fixed-fps content,
          * timebase should be 1/framerate and timestamp increments should be
          * identical to 1. */
@@ -619,16 +618,11 @@ static AVFrame *get_video_frame(OutputStream *ost)
 
 //unsigned char *filt_diffnow_buffer=NULL;
 //unsigned char *filt_before_buffer=NULL;
-//n:now,b:before
-int Rn[2][2],Gn[2][2],Bn[2][2];
-int Yn[2][2],Un[2][2],Vn[2][2];
-int Rb[2][2],Gb[2][2],Bb[2][2];
-int Yb[2][2],Ub[2][2],Vb[2][2];
+int r[2][2],g[2][2],b[2][2];
 int re,ge,be,ra,ga,ba;
 extern void calc_matrix(int x,int y);
 void copyFrame_now() {
   int x,y,x2,y2,x0,y0,Y,U,V;
-  
   if(Ydiffnow == NULL) {
     frameWidth    = filt_frame->width;
     frameHeight   = filt_frame->height;
@@ -647,10 +641,9 @@ void copyFrame_now() {
            
   }
 #if 1
-  for (y = 0; y < frameHeight; y++) {
+  for (y = 0; y < filt_frame->height; y++) {
     y2 = y/2;
-    for (x = 0; x < frameWidth; x++) {
-      printf("%s(%d),%4d,%4d\n",__FILE__,__LINE__,y,x);
+    for (x = 0; x < filt_frame->width; x++) {
       calc_matrix(x,y);     
       x2 = x/2;
 //    if(ga > 128 && ba > 32) {
@@ -662,13 +655,13 @@ void copyFrame_now() {
         Ydiffnow[y * Ylinesize + x]  = BLACKY;
         Udiffnow[y2* Ulinesize + x2] = BLACKU;
         Vdiffnow[y2* Vlinesize + x2] = BLACKV;
-        printf("%s(%d),%4d,%4d,%5d\n",__FILE__,__LINE__,y,x,Yn[1][1]);
+//      printf("%s(%d),%4d,%4d,%5d,%5d,%5d,%5d,%5d,%5d\n",__FILE__,__LINE__,y,x,Y,U,V,r,g,b);
       }
       else {
         Ydiffnow[y * Ylinesize + x]  = WHITEY;
         Udiffnow[y2* Ulinesize + x2] = WHITEU;
         Vdiffnow[y2* Vlinesize + x2] = WHITEV;
-        printf("%s(%d),%4d,%4d,%5d\n",__FILE__,__LINE__,y,x,Yn[1][1]);
+//      printf("%s(%d),%4d,%4d,%5d,%5d,%5d,%5d,%5d,%5d\n",__FILE__,__LINE__,y,x,Y,U,V,r,g,b);
       }  
     }
   }    
@@ -687,9 +680,9 @@ void copyFrame() {
     Ubefore = (unsigned char *)malloc(Ulinesize*frameHeight);
     Vbefore = (unsigned char *)malloc(Vlinesize*frameHeight);
   }
-  for (y = 0; y < frameHeight; y++) {
+  for (y = 0; y < filt_frame->height; y++) {
     y2 = y/2;
-    for (x = 0; x < frameWidth; x++) {
+    for (x = 0; x < filt_frame->width; x++) {
       x2 = x/2;
       Ybefore[y  * Ylinesize + x] =  filt_frame->data[0][y * Ylinesize + x];
       Ubefore[y2 * Ulinesize + x2] = filt_frame->data[1][y2* Ulinesize + x2];
@@ -713,9 +706,9 @@ void copyFrame_diffnow() {
     Gbefore = (unsigned char *)malloc(Ylinesize*frameHeight);
     Bbefore = (unsigned char *)malloc(Ylinesize*frameHeight);
   }  
-  for (y = 0; y < frameHeight; y++) {
+  for (y = 0; y < filt_frame->height; y++) {
     y2 = y/2;
-    for (x = 0; x < frameWidth; x++) {
+    for (x = 0; x < filt_frame->width; x++) {
       x2 = x/2;
       Ybefore[y * Ylinesize + x]  = Ydiffnow[y  * Ylinesize + x];
       Ubefore[y2* Ulinesize + x2] = Udiffnow[y2 * Ulinesize + x2];
@@ -1122,6 +1115,7 @@ int main(int argc, char **argv)
                         encode_audio = !write_audio_frame(oc, &audio_st);
                     }
                     copyFrame_diffnow();
+                    
 //                  copyFrame();
 #endif
 //                  av_frame_unref(filt_frame);
