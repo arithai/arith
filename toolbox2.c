@@ -103,6 +103,12 @@ extern unsigned char *Vbefore;
 extern unsigned char *Ydiffnow;
 extern unsigned char *Udiffnow;
 extern unsigned char *Vdiffnow;
+extern unsigned char *Yref;
+extern unsigned char *Uref;
+extern unsigned char *Vref;
+extern unsigned char *Rnow;
+extern unsigned char *Gnow;
+extern unsigned char *Bnow;
 extern int Ylinesize,Ulinesize,Vlinesize;
 extern bool marginal(int x,int y);
 extern int HXYV[60][60];
@@ -169,12 +175,16 @@ extern int HX[GLOBAL_HEIGHT/2],HY[GLOBAL_WIDTH/2];
 void calc_histogram(AVFrame *pict, int frame_index,
                           int width, int height);
 
+extern void calc_nb(int x,int y);
+extern int rn[2][2],gn[2][2],bn[2][2];
+extern int rb[2][2],gb[2][2],bb[2][2];
+extern int re,ge,be,ra,ga,ba;
 void fill_yuv_image(AVFrame *pict, int frame_index,
                     int width, int height)
 {
-    int x, y, i, g;
+    int x, y, i, r,g,b;
     int x0, y0, x2, y2;
-    int x30,y30,xs60,ys60;
+    int x30,y30,xs60,ys60;           
     int Y0,U0,V0,Y1,U1,V1,G0,G1;
 #if 0
     int Xmid=(Xleft+Xright)/2;
@@ -434,7 +444,7 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
       }        
     }
 #endif
-#if 1
+#if 0
     /* Y */
     for (y = 0; y < height; y++)  {
         y2 = y/2;
@@ -452,4 +462,79 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
         }
     }       
 #endif    
+#if 0
+    /* Y */
+    for (y = 0; y < height; y++)  {
+        y2 = y/2;
+        for (x = 0; x < width; x++) {
+            x2 = x/2;
+            r = Rnow[y *  pict->linesize[0] + x];
+            g = Gnow[y *  pict->linesize[0] + x];
+            b = Bnow[y *  pict->linesize[0] + x];
+            Y0 = RGB2Y(r,g,b);
+            U0 = RGB2U(r,g,b);
+            V0 = RGB2V(r,g,b);            
+            pict->data[0][y *  pict->linesize[0] + x]  = Y0;
+            pict->data[1][y2 * pict->linesize[1] + x2] = U0;
+            pict->data[2][y2 * pict->linesize[2] + x2] = V0;
+        }
+    }       
+#endif
+#if 0
+    /* Y */
+    for (y = 0; y < height; y++)  {
+        y2 = y/2;
+        for (x = 0; x < width; x++) {
+            x2 = x/2;
+            pict->data[0][y *  pict->linesize[0] + x]  = Yref[y *  Ylinesize + x];
+            pict->data[1][y2 * pict->linesize[1] + x2] = Uref[y2 *  Ulinesize + x2];
+            pict->data[2][y2 * pict->linesize[2] + x2] = Vref[y2 *  Vlinesize + x2];
+        }
+    }       
+#endif 
+#if 1
+    if (frame_index>0) {
+      printf("fill_yuv_image %s(%d),%3d,(%4d,%4d,%4d)\n",__FILE__,__LINE__,frame_index,
+             Ylinesize,Ulinesize,Vlinesize);
+      for (y = 0; y < height; y++) {
+        y2 = y/2;
+        for (x = 0; x < width; x++) {
+          x2 = x/2;
+          calc_nb(x,y);
+          
+          G0 = gb[1][1]; if(G0<64) G0=0; else G0=255;
+          G1 = gn[1][1]; if(G1<64) G1=0; else G1=255;
+          Y1 = Ydiffnow[y*Ylinesize + x];  //<--ga 
+      //  printf("%s(%d) (%4d,%d) (%4d,%4d,%4d,%4d)\n",__FILE__,__LINE__,y,x,G0,G1,ga,Y1);    
+          g = abs(G0-G1);
+                    
+          if(g > 250 && Y1 > 250) {
+            pict->data[0][y *  pict->linesize[0] + x]  = BLACKY;                
+            pict->data[1][y2 * pict->linesize[1] + x2] = BLACKU;
+            pict->data[2][y2 * pict->linesize[2] + x2] = BLACKV;
+          }  
+          else {
+            pict->data[0][y *  pict->linesize[0] + x]  = WHITEY;                
+            pict->data[1][y2 * pict->linesize[1] + x2] = WHITEU;
+            pict->data[2][y2 * pict->linesize[2] + x2] = WHITEV;
+          }  
+        }
+      }  
+    }
+    else {
+      printf("fill_yuv_image %s(%d),%3d\n",__FILE__,__LINE__,frame_index);
+      for (y = 0; y < height; y++) {
+     //   printf("fill_yuv_image %s(%d) (%4d,%4d),%4d,%4d,%4d\n",__FILE__,__LINE__,x,y,
+     //          Ylinesize,Ulinesize,Vlinesize);
+        y2 = y/2;
+        for (x = 0; x < width; x++) {
+          x2 = x/2;
+          pict->data[0][y *  pict->linesize[0] + x]  = Ydiffnow[y *  Ylinesize + x];
+          pict->data[1][y2 * pict->linesize[1] + x2] = Udiffnow[y2 * Ulinesize + x2];
+          pict->data[2][y2 * pict->linesize[2] + x2] = Vdiffnow[y2 * Vlinesize + x2];          
+        }
+      }        
+    }
+#endif
+    
 }

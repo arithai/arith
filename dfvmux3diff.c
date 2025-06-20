@@ -134,6 +134,9 @@ unsigned char *Vbefore=NULL;
 unsigned char *Ydiffnow=NULL;
 unsigned char *Udiffnow=NULL;
 unsigned char *Vdiffnow=NULL;
+unsigned char *Yref=NULL;
+unsigned char *Uref=NULL;
+unsigned char *Vref=NULL;
 int Ylinesize,Ulinesize,Vlinesize;
 unsigned char *Rbefore=NULL;
 unsigned char *Gbefore=NULL;
@@ -618,10 +621,11 @@ static AVFrame *get_video_frame(OutputStream *ost)
 
 //unsigned char *filt_diffnow_buffer=NULL;
 //unsigned char *filt_before_buffer=NULL;
-int r[2][2],g[2][2],b[2][2];
+int rn[2][2],gn[2][2],bn[2][2];
+int rb[2][2],gb[2][2],bb[2][2];
 int re,ge,be,ra,ga,ba;
 extern void calc_matrix(int x,int y);
-void copyFrame_now() {
+void copyFrame_now(int frame_index) {
   int x,y,x2,y2,x0,y0,Y,U,V;
   if(Ydiffnow == NULL) {
     frameWidth    = filt_frame->width;
@@ -632,6 +636,9 @@ void copyFrame_now() {
     Ydiffnow = (unsigned char *)malloc(Ylinesize*frameHeight);
     Udiffnow = (unsigned char *)malloc(Ulinesize*frameHeight);
     Vdiffnow = (unsigned char *)malloc(Vlinesize*frameHeight);
+    Yref = (unsigned char *)malloc(Ylinesize*frameHeight);
+    Uref = (unsigned char *)malloc(Ulinesize*frameHeight);
+    Vref = (unsigned char *)malloc(Vlinesize*frameHeight);
     Rnow = (unsigned char *)malloc(Ylinesize*frameHeight);
     Gnow = (unsigned char *)malloc(Ylinesize*frameHeight);
     Bnow = (unsigned char *)malloc(Ylinesize*frameHeight);
@@ -646,6 +653,7 @@ void copyFrame_now() {
     for (x = 0; x < filt_frame->width; x++) {
       calc_matrix(x,y);     
       x2 = x/2;
+         
 //    if(ga > 128 && ba > 32) {
 //    if(ga > 128) {
 //    if(ge > 16 && ba > 16) {
@@ -662,10 +670,35 @@ void copyFrame_now() {
         Udiffnow[y2* Ulinesize + x2] = WHITEU;
         Vdiffnow[y2* Vlinesize + x2] = WHITEV;
 //      printf("%s(%d),%4d,%4d,%5d,%5d,%5d,%5d,%5d,%5d\n",__FILE__,__LINE__,y,x,Y,U,V,r,g,b);
+      }
+
+//frame_index > 0 LBM Lattice Boltzmann method
+      if(frame_index > 0)  {
+        for(y2=-1;y2<=1;y2++) {
+          for(x2=-1;x2<=1;x2++) {
+            if(x==0 && x2==-1) x0=0; else x0=x+x2;    
+            if(y==0 && y2==-1) y0=0; else y0=y+y2; 
+            if(x==(filt_frame->width-1)  && x2==1) x0=x; else x0=x+x2;
+            if(y==(filt_frame->height-1) && y2==1) y0=y; else y0=y+y2;       
+            rb[1+x2][1+y2]=Rbefore[y0* Ylinesize + x0];
+            gb[1+x2][1+y2]=Gbefore[y0* Ylinesize + x0];
+            bb[1+x2][1+y2]=Bbefore[y0* Ylinesize + x0];             
+          }
+        }  
+        Yref[y* Ylinesize + x]     = abs(gb[1][1]-gn[1][1]);
+        Uref[y/2* Ulinesize + x/2] = 0;
+        Vref[y/2* Vlinesize + x/2] = 0;
+      }
+      else {
+        Yref[y* Ylinesize + x]     = Ydiffnow[y * Ylinesize + x];
+        Uref[y/2* Ulinesize + x/2] = Udiffnow[y/2 * Ulinesize + x/2];
+        Vref[y/2* Vlinesize + x/2] = Vdiffnow[y/2 * Vlinesize + x/2];      
       }  
     }
   }    
 #endif  
+
+
 }
 
 void copyFrame() {
@@ -1106,7 +1139,7 @@ int main(int argc, char **argv)
                       (!encode_audio || av_compare_ts(video_st.next_pts, video_st.enc->time_base,
                         audio_st.next_pts, audio_st.enc->time_base) <= 0)) {
                         printf("%s(%d),%3d\n",__FILE__,__LINE__,video_st.next_pts);
-                        copyFrame_now();
+                        copyFrame_now(video_st.next_pts);
                       //calc_edge(video_st.next_pts,video_st.enc->width, video_st.enc->height);
                         encode_video = !write_video_frame(oc, &video_st);
                     //  encode_audio = !write_audio_frame(oc, &audio_st);

@@ -179,7 +179,7 @@ typedef struct OutputStream {
 #include <stdbool.h>
 #define MAX_JUMP 2
 extern AVFrame *filt_frame;
-int frameWidth,frameHeight;
+extern int frameWidth,frameHeight;
 extern unsigned char *Ybefore;
 extern unsigned char *Ubefore;
 extern unsigned char *Vbefore;
@@ -886,8 +886,9 @@ void calc_histogram(AVFrame *pict, int frame_index,
   Xright=2*x;
   printf("Xmax=(%d,%d,%d)%d\n",Xmax,Xleft,Xright,maxv);
 }
-
-extern int r[2][2],g[2][2],b[2][2];
+//b:before n:now
+extern int rn[2][2],gn[2][2],bn[2][2];
+extern int rb[2][2],gb[2][2],bb[2][2];
 extern int re,ge,be,ra,ga,ba;
 #define a(v) (v>64? 255:0)   
 void calc_matrix(int x,int y) {
@@ -900,27 +901,27 @@ void calc_matrix(int x,int y) {
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  r[0][0]=YUV2R(Y,U,V);
-  g[0][0]=YUV2G(Y,U,V);
-  b[0][0]=YUV2B(Y,U,V);  
+  rn[0][0]=YUV2R(Y,U,V);
+  gn[0][0]=YUV2G(Y,U,V);
+  bn[0][0]=YUV2B(Y,U,V);  
   
   y0 = y;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  r[0][1]=YUV2R(Y,U,V);
-  g[0][1]=YUV2G(Y,U,V);
-  b[0][1]=YUV2B(Y,U,V);  
+  rn[0][1]=YUV2R(Y,U,V);
+  gn[0][1]=YUV2G(Y,U,V);
+  bn[0][1]=YUV2B(Y,U,V);  
   
   y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  r[0][2]=YUV2R(Y,U,V);
-  g[0][2]=YUV2G(Y,U,V);
-  b[0][2]=YUV2B(Y,U,V);
+  rn[0][2]=YUV2R(Y,U,V);
+  gn[0][2]=YUV2G(Y,U,V);
+  bn[0][2]=YUV2B(Y,U,V);
              
   x0 = x;
     
@@ -930,31 +931,31 @@ void calc_matrix(int x,int y) {
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  r[1][0]=YUV2R(Y,U,V);
-  g[1][0]=YUV2G(Y,U,V);
-  b[1][0]=YUV2B(Y,U,V);
+  rn[1][0]=YUV2R(Y,U,V);
+  gn[1][0]=YUV2G(Y,U,V);
+  bn[1][0]=YUV2B(Y,U,V);
   
   y0 = y;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  r[1][1]=YUV2R(Y,U,V);
-  g[1][1]=YUV2G(Y,U,V);
-  b[1][1]=YUV2B(Y,U,V);
-
-  Rnow[y*filt_frame->linesize[0]+x]=r[1][1];
-  Gnow[y*filt_frame->linesize[0]+x]=g[1][1];
-  Bnow[y*filt_frame->linesize[0]+x]=b[1][1];
-
+  rn[1][1]=YUV2R(Y,U,V);
+  gn[1][1]=YUV2G(Y,U,V);
+  bn[1][1]=YUV2B(Y,U,V);
+      
+  Rnow[y*filt_frame->linesize[0]+x]=rn[1][1];
+  Gnow[y*filt_frame->linesize[0]+x]=gn[1][1];
+  Bnow[y*filt_frame->linesize[0]+x]=bn[1][1];
+      
   y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  r[1][2]=YUV2R(Y,U,V);
-  g[1][2]=YUV2G(Y,U,V);
-  b[1][2]=YUV2B(Y,U,V);
+  rn[1][2]=YUV2R(Y,U,V);
+  gn[1][2]=YUV2G(Y,U,V);
+  bn[1][2]=YUV2B(Y,U,V);
 
   x0 = x+1;if(x0==filt_frame->width) x0=filt_frame->width-1; 
     
@@ -964,51 +965,135 @@ void calc_matrix(int x,int y) {
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  r[2][0]=YUV2R(Y,U,V);
-  g[2][0]=YUV2G(Y,U,V);
-  b[2][0]=YUV2B(Y,U,V);
+  rn[2][0]=YUV2R(Y,U,V);
+  gn[2][0]=YUV2G(Y,U,V);
+  bn[2][0]=YUV2B(Y,U,V);
   
   y0 = y;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  r[2][1]=YUV2R(Y,U,V);
-  g[2][1]=YUV2G(Y,U,V);
-  b[2][1]=YUV2B(Y,U,V);
+  rn[2][1]=YUV2R(Y,U,V);
+  gn[2][1]=YUV2G(Y,U,V);
+  bn[2][1]=YUV2B(Y,U,V);
 
   y0 = y+1;if(y0==filt_frame->height) y0=filt_frame->height-1;      
   y2 = y0/2;      
   Y=filt_frame->data[0][y0* filt_frame->linesize[0] + x0];
   U=filt_frame->data[1][y2* filt_frame->linesize[1] + x2];
   V=filt_frame->data[2][y2* filt_frame->linesize[2] + x2];
-  r[2][2]=YUV2R(Y,U,V);
-  g[2][2]=YUV2G(Y,U,V);
-  b[2][2]=YUV2B(Y,U,V);
+  rn[2][2]=YUV2R(Y,U,V);
+  gn[2][2]=YUV2G(Y,U,V);
+  bn[2][2]=YUV2B(Y,U,V);
   
-  r11=r[1][1];g11=g[1][1];b11=b[1][1];
-  re=abs(r11-r[0][0])+abs(r11-r[0][1])+abs(r11-r[0][2])+
-     abs(r11-r[1][0])                 +abs(r11-r[1][2])+
-     abs(r11-r[2][0])+abs(r11-r[2][1])+abs(r11-r[2][2]);
-  g11=g[1][1];
-  ge=abs(g11-g[0][0])+abs(g11-g[0][1])+abs(g11-g[0][2])+
-     abs(g11-g[1][0])                 +abs(g11-g[1][2])+
-     abs(g11-g[2][0])+abs(g11-g[2][1])+abs(g11-g[2][2]);
-  b11=b[1][1];
-  be=abs(b11-b[0][0])+abs(b11-b[0][1])+abs(b11-b[0][2])+
-     abs(b11-b[1][0])                 +abs(b11-b[1][2])+
-     abs(b11-b[2][0])+abs(b11-b[2][1])+abs(b11-b[2][2]);  
+  r11=rn[1][1];
+  re=abs(r11-rn[0][0])+abs(r11-rn[0][1])+abs(r11-rn[0][2])+
+     abs(r11-rn[1][0])                  +abs(r11-rn[1][2])+
+     abs(r11-rn[2][0])+abs(r11-rn[2][1])+abs(r11-rn[2][2]);
+  g11=gn[1][1];
+  ge=abs(g11-gn[0][0])+abs(g11-gn[0][1])+abs(g11-gn[0][2])+
+     abs(g11-gn[1][0])                  +abs(g11-gn[1][2])+
+     abs(g11-gn[2][0])+abs(g11-gn[2][1])+abs(g11-gn[2][2]);
+  b11=bn[1][1];
+  be=abs(b11-bn[0][0])+abs(b11-bn[0][1])+abs(b11-bn[0][2])+
+     abs(b11-bn[1][0])                  +abs(b11-bn[1][2])+
+     abs(b11-bn[2][0])+abs(b11-bn[2][1])+abs(b11-bn[2][2]);  
 
-  r11a=a(r[1][1]); 
-  ra=abs(r11a-a(r[0][0]))+abs(r11a-a(r[0][1]))+abs(r11a-a(r[0][2]))+
-     abs(r11a-a(r[1][0]))                     +abs(r11a-a(r[1][2]))+
-     abs(r11a-a(r[2][0]))+abs(r11a-a(r[2][1]))+abs(r11a-a(r[2][2]));
-  g11a=a(g[1][1]); 
-  ga=abs(g11a-a(g[0][0]))+abs(g11a-a(g[0][1]))+abs(g11a-a(g[0][2]))+
-     abs(g11a-a(g[1][0]))                     +abs(g11a-a(g[1][2]))+
-     abs(g11a-a(g[2][0]))+abs(g11a-a(g[2][1]))+abs(g11a-a(g[2][2]));
-  b11a=a(b[1][1]); 
-  ba=abs(b11a-a(b[0][0]))+abs(b11a-a(b[0][1]))+abs(b11a-a(b[0][2]))+
-     abs(b11a-a(b[1][0]))                     +abs(b11a-a(b[1][2]))+
-     abs(b11a-a(b[2][0]))+abs(b11a-a(b[2][1]))+abs(b11a-a(b[2][2]));
+  r11a=a(r11); 
+  ra=abs(r11a-a(rn[0][0]))+abs(r11a-a(rn[0][1]))+abs(r11a-a(rn[0][2]))+
+     abs(r11a-a(rn[1][0]))                      +abs(r11a-a(rn[1][2]))+
+     abs(r11a-a(rn[2][0]))+abs(r11a-a(rn[2][1]))+abs(r11a-a(rn[2][2]));
+  g11a=a(g11); 
+  ga=abs(g11a-a(gn[0][0]))+abs(g11a-a(gn[0][1]))+abs(g11a-a(gn[0][2]))+
+     abs(g11a-a(gn[1][0]))                      +abs(g11a-a(gn[1][2]))+
+     abs(g11a-a(gn[2][0]))+abs(g11a-a(gn[2][1]))+abs(g11a-a(gn[2][2]));
+  b11a=a(b11); 
+  ba=abs(b11a-a(bn[0][0]))+abs(b11a-a(bn[0][1]))+abs(b11a-a(bn[0][2]))+
+     abs(b11a-a(bn[1][0]))                      +abs(b11a-a(bn[1][2]))+
+     abs(b11a-a(bn[2][0]))+abs(b11a-a(bn[2][1]))+abs(b11a-a(bn[2][2]));
 }
+
+extern int frameWidth,frameHeight;
+void calc_nb(int x,int y) {
+  int x2,y2,x0,y0,Y,U,V,r11,g11,b11,r11a,g11a,b11a;
+  int pos;
+  int w,h;
+  w = frameWidth; h = frameHeight;
+  x0 = x-1;if(x0<0) x0=0;
+    
+  y0 = y-1;if(y0<0) y0=0;      
+  pos = y0*Ylinesize + x0;
+  rn[0][0]=Rnow[pos];   gn[0][0]=Gnow[pos];   bn[0][0]=Bnow[pos];  
+  rb[0][0]=Rbefore[pos];gb[0][0]=Gbefore[pos];bb[0][0]=Bbefore[pos];  
+  
+  y0 = y;      
+  pos = y0*Ylinesize + x0;
+  rn[0][1]=Rnow[pos];   gn[0][1]=Gnow[pos];   bn[0][1]=Bnow[pos];  
+  rb[0][1]=Rbefore[pos];gb[0][1]=Gbefore[pos];bb[0][1]=Bbefore[pos];  
+  
+  y0 = y+1;if(y0==h) y0=h-1;      
+  pos = y0*Ylinesize + x0;
+  rn[0][2]=Rnow[pos];   gn[0][2]=Gnow[pos];   bn[0][2]=Bnow[pos];  
+  rb[0][2]=Rbefore[pos];gb[0][2]=Gbefore[pos];bb[0][2]=Bbefore[pos];  
+             
+  x0 = x;  
+  y0 = y-1;if(y0<0) y0=0;      
+  pos = y0*Ylinesize + x0;
+  rn[1][0]=Rnow[pos];   gn[1][0]=Gnow[pos];   bn[1][0]=Bnow[pos];  
+  rb[1][0]=Rbefore[pos];gb[1][0]=Gbefore[pos];bb[1][0]=Bbefore[pos];  
+
+  y0 = y;      
+  pos = y0*Ylinesize + x0;
+  rn[1][1]=Rnow[pos];   gn[1][1]=Gnow[pos];   bn[1][1]=Bnow[pos];  
+  rb[1][1]=Rbefore[pos];gb[1][1]=Gbefore[pos];bb[1][1]=Bbefore[pos];  
+     
+  y0 = y+1;if(y0==h) y0=h-1;      
+  pos = y0*Ylinesize + x0;
+  rn[1][2]=Rnow[pos];   gn[1][2]=Gnow[pos];   bn[1][2]=Bnow[pos];  
+  rb[1][2]=Rbefore[pos];gb[1][2]=Gbefore[pos];bb[1][2]=Bbefore[pos];  
+
+  x0 = x+1;if(x0==w) x0=w-1; 
+    
+  y0 = y-1;if(y0<0) y0=0;      
+  pos = y0*Ylinesize + x0;
+  rn[2][0]=Rnow[pos];   gn[2][0]=Gnow[pos];   bn[2][0]=Bnow[pos];  
+  rb[2][0]=Rbefore[pos];gb[2][0]=Gbefore[pos];bb[2][0]=Bbefore[pos];  
+  
+  y0 = y;      
+  pos = y0*Ylinesize + x0;
+  rn[2][1]=Rnow[pos];   gn[2][1]=Gnow[pos];   bn[2][1]=Bnow[pos];  
+  rb[2][1]=Rbefore[pos];gb[2][1]=Gbefore[pos];bb[2][1]=Bbefore[pos];  
+
+  y0 = y+1;if(y0==h) y0=h-1;      
+  pos = y0*Ylinesize + x0;
+  rn[2][2]=Rnow[pos];   gn[2][2]=Gnow[pos];   bn[2][2]=Bnow[pos];  
+  rb[2][2]=Rbefore[pos];gb[2][2]=Gbefore[pos];bb[2][2]=Bbefore[pos];  
+  
+  r11=rn[1][1];
+  re=abs(r11-rn[0][0])+abs(r11-rn[0][1])+abs(r11-rn[0][2])+
+     abs(r11-rn[1][0])                  +abs(r11-rn[1][2])+
+     abs(r11-rn[2][0])+abs(r11-rn[2][1])+abs(r11-rn[2][2]);
+  g11=gn[1][1];
+  ge=abs(g11-gn[0][0])+abs(g11-gn[0][1])+abs(g11-gn[0][2])+
+     abs(g11-gn[1][0])                  +abs(g11-gn[1][2])+
+     abs(g11-gn[2][0])+abs(g11-gn[2][1])+abs(g11-gn[2][2]);
+  b11=bn[1][1];
+  be=abs(b11-bn[0][0])+abs(b11-bn[0][1])+abs(b11-bn[0][2])+
+     abs(b11-bn[1][0])                  +abs(b11-bn[1][2])+
+     abs(b11-bn[2][0])+abs(b11-bn[2][1])+abs(b11-bn[2][2]);  
+
+  r11a=a(r11); 
+  ra=abs(r11a-a(rn[0][0]))+abs(r11a-a(rn[0][1]))+abs(r11a-a(rn[0][2]))+
+     abs(r11a-a(rn[1][0]))                      +abs(r11a-a(rn[1][2]))+
+     abs(r11a-a(rn[2][0]))+abs(r11a-a(rn[2][1]))+abs(r11a-a(rn[2][2]));
+  g11a=a(g11); 
+  ga=abs(g11a-a(gn[0][0]))+abs(g11a-a(gn[0][1]))+abs(g11a-a(gn[0][2]))+
+     abs(g11a-a(gn[1][0]))                      +abs(g11a-a(gn[1][2]))+
+     abs(g11a-a(gn[2][0]))+abs(g11a-a(gn[2][1]))+abs(g11a-a(gn[2][2]));
+  b11a=a(b11); 
+  ba=abs(b11a-a(bn[0][0]))+abs(b11a-a(bn[0][1]))+abs(b11a-a(bn[0][2]))+
+     abs(b11a-a(bn[1][0]))                      +abs(b11a-a(bn[1][2]))+
+     abs(b11a-a(bn[2][0]))+abs(b11a-a(bn[2][1]))+abs(b11a-a(bn[2][2]));
+}
+
