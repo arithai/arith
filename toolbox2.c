@@ -179,13 +179,15 @@ extern void calc_nb(int x,int y);
 extern int rn[2][2],gn[2][2],bn[2][2];
 extern int rb[2][2],gb[2][2],bb[2][2];
 extern int re,ge,be,ra,ga,ba;
+#define a(v) (v<128? 0:255)  
 void fill_yuv_image(AVFrame *pict, int frame_index,
                     int width, int height)
 {
     int x, y, i, r,g,b;
     int x0, y0, x2, y2;
     int x30,y30,xs60,ys60;           
-    int Y0,U0,V0,Y1,U1,V1,G0,G1;
+    int Y0,U0,V0,Y1,U1,V1,R0,G0,B0,G1,R1,B1;
+    int pos;
 #if 0
     int Xmid=(Xleft+Xright)/2;
     int Ymid=(Yup+Ydown)/2;
@@ -502,13 +504,26 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
           x2 = x/2;
           calc_nb(x,y);
           
-          G0 = gb[1][1]; if(G0<64) G0=0; else G0=255;
-          G1 = gn[1][1]; if(G1<64) G1=0; else G1=255;
-          Y1 = Ydiffnow[y*Ylinesize + x];  //<--ga 
-      //  printf("%s(%d) (%4d,%d) (%4d,%4d,%4d,%4d)\n",__FILE__,__LINE__,y,x,G0,G1,ga,Y1);    
-          g = abs(G0-G1);
-                    
-          if(g > 250 && Y1 > 250) {
+          R1 = rn[1][1]; G1 = gn[1][1]; B1 = bn[1][1];
+          R0 = rb[1][1]; G0 = gb[1][1]; B0 = bb[1][1];
+          #if 1
+          pict->data[0][y *  pict->linesize[0] + x]  = RGB2Y(R1,G1,B1);
+          pict->data[1][y2 * pict->linesize[1] + x2] = RGB2U(R1,G1,B1);
+          pict->data[2][y2 * pict->linesize[2] + x2] = RGB2V(R1,G1,B1);
+          #endif
+          #if 0
+          pict->data[0][y *  pict->linesize[0] + x]  = RGB2Y(R0,G0,B0);
+          pict->data[1][y2 * pict->linesize[1] + x2] = RGB2U(R0,G0,B0);
+          pict->data[2][y2 * pict->linesize[2] + x2] = RGB2V(R0,G0,B0);
+          #endif          
+          #if 1
+          g=abs(a(G0)-a(G1));
+#if 0
+          if (ge>8)
+          printf("%s(%d) (%4d,%4d),(%4d,%4d),(%4d,%4d),(%4d,%4d),%4d\n",
+                 __FILE__,__LINE__,y,x,gb[1][1],gn[1][1],G0,G1,g,ga,Y1);                       
+#endif      
+         if(ge> 8 && (abs(a(G1)-a(G0)) > 8 || abs(a(B1)-a(B0)) > 8)  ) { //變動且是邊界
             pict->data[0][y *  pict->linesize[0] + x]  = BLACKY;                
             pict->data[1][y2 * pict->linesize[1] + x2] = BLACKU;
             pict->data[2][y2 * pict->linesize[2] + x2] = BLACKV;
@@ -517,9 +532,10 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
             pict->data[0][y *  pict->linesize[0] + x]  = WHITEY;                
             pict->data[1][y2 * pict->linesize[1] + x2] = WHITEU;
             pict->data[2][y2 * pict->linesize[2] + x2] = WHITEV;
-          }  
-        }
-      }  
+          }
+          #endif
+        }  
+      }
     }
     else {
       printf("fill_yuv_image %s(%d),%3d\n",__FILE__,__LINE__,frame_index);
@@ -529,9 +545,18 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
         y2 = y/2;
         for (x = 0; x < width; x++) {
           x2 = x/2;
+          #if 1 
+          pos = y *  pict->linesize[0] + x;
+          R1 = Rnow[pos]; G1 = Gnow[pos]; B1 = Bnow[pos];
+          pict->data[0][y *  pict->linesize[0] + x]  = RGB2Y(R1,G1,B1);
+          pict->data[1][y2 * pict->linesize[1] + x2] = RGB2U(R1,G1,B1);
+          pict->data[2][y2 * pict->linesize[2] + x2] = RGB2V(R1,G1,B1);
+          #endif
+          #if 0
           pict->data[0][y *  pict->linesize[0] + x]  = Ydiffnow[y *  Ylinesize + x];
           pict->data[1][y2 * pict->linesize[1] + x2] = Udiffnow[y2 * Ulinesize + x2];
-          pict->data[2][y2 * pict->linesize[2] + x2] = Vdiffnow[y2 * Vlinesize + x2];          
+          pict->data[2][y2 * pict->linesize[2] + x2] = Vdiffnow[y2 * Vlinesize + x2];
+          #endif          
         }
       }        
     }

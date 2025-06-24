@@ -271,6 +271,7 @@ static void add_stream(OutputStream *ost, AVFormatContext *oc,
 
         c->width    = dec_ctx->width;    //2160; //352;
         c->height   = dec_ctx->height;   //3840; //288;
+
         #else
         c->width    = 352;
         c->height   = 288;
@@ -671,20 +672,8 @@ void copyFrame_now(int frame_index) {
         Vdiffnow[y2* Vlinesize + x2] = WHITEV;
 //      printf("%s(%d),%4d,%4d,%5d,%5d,%5d,%5d,%5d,%5d\n",__FILE__,__LINE__,y,x,Y,U,V,r,g,b);
       }
-
+      if(frame_index) {
 //frame_index > 0 LBM Lattice Boltzmann method
-      if(frame_index > 0)  {
-        for(y2=-1;y2<=1;y2++) {
-          for(x2=-1;x2<=1;x2++) {
-            if(x==0 && x2==-1) x0=0; else x0=x+x2;    
-            if(y==0 && y2==-1) y0=0; else y0=y+y2; 
-            if(x==(filt_frame->width-1)  && x2==1) x0=x; else x0=x+x2;
-            if(y==(filt_frame->height-1) && y2==1) y0=y; else y0=y+y2;       
-            rb[1+x2][1+y2]=Rbefore[y0* Ylinesize + x0];
-            gb[1+x2][1+y2]=Gbefore[y0* Ylinesize + x0];
-            bb[1+x2][1+y2]=Bbefore[y0* Ylinesize + x0];             
-          }
-        }  
         Yref[y* Ylinesize + x]     = abs(gb[1][1]-gn[1][1]);
         Uref[y/2* Ulinesize + x/2] = 0;
         Vref[y/2* Vlinesize + x/2] = 0;

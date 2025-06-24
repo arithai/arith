@@ -409,7 +409,7 @@ int wp,
     Tfi,TposSlope,Tc0,Tc1,Ty0,Tw
     ;
 void FindXYZSTLineList(AVFrame *pict, int frame_index,
-                    int width, int height) { //60x60
+                       int width, int height) { //60x60
   int Y,U,V,R,G,B;
   int c0,c1,w,countJump;
   bool isStart;
@@ -418,7 +418,7 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
 //x0,y0,t,x=x0+t,y=[y0+rt],t jump
   int  x0,y0,x,y;
   
-  c0=0;c1=0;    
+  c0=0;c1=0;
   c0=c0;c1=c1; 
 //Y     
   lnListNext=lnHead;   
@@ -890,6 +890,7 @@ void calc_histogram(AVFrame *pict, int frame_index,
 extern int rn[2][2],gn[2][2],bn[2][2];
 extern int rb[2][2],gb[2][2],bb[2][2];
 extern int re,ge,be,ra,ga,ba;
+#undef a(v)
 #define a(v) (v>64? 255:0)   
 void calc_matrix(int x,int y) {
   int x2,y2,x0,y0,Y,U,V,r11,g11,b11,r11a,g11a,b11a;
@@ -1015,6 +1016,8 @@ void calc_matrix(int x,int y) {
 }
 
 extern int frameWidth,frameHeight;
+#undef a(v)
+#define a(v) (v>32? 255:0)   
 void calc_nb(int x,int y) {
   int x2,y2,x0,y0,Y,U,V,r11,g11,b11,r11a,g11a,b11a;
   int pos;
