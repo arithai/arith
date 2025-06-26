@@ -1,5 +1,8 @@
 ﻿<html>
 <head>
+<script type="text/javascript">
+   document.cookie = 'window_width='+window.innerWidth+'; expires=Fri, 3 Aug 2901 20:47:11 UTC; path=/';
+</script>
 	<meta HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=UTF-8'>
 <?php 
 $memdata=$_SERVER['QUERY_STRING']; //getenv("Query_String");
@@ -29,7 +32,7 @@ if (!empty($cname)) {
   if ($result->num_rows > 0) {
   // output data of each row
     while($row = $result->fetch_assoc()) {
-      echo $row["cname"]. "_".$row["arithaiid"]."_".$row["youtubetext"]."_".$row["youtubeid"]."_".$row["vid"]. "<br>";
+//      echo $row["cname"]. "_".$row["arithaiid"]."_".$row["youtubetext"]."_".$row["youtubeid"]."_".$row["vid"]. "<br>";
       $cname       =  $row["cname"];
       $arithaino   =  $row["arithaiid"];
       $youtubetext =  $row["youtubetext"];
@@ -38,7 +41,7 @@ if (!empty($cname)) {
 //  $sql2 = "update Species set vid='$cnt',youtubeid='咖啡' where cname='$cname';";
     }
   }
-  $result = $conn->query($sql2);
+//$result = $conn->query($sql2);
 //echo "Connected successfully 3\n";
 }
 else {
@@ -58,6 +61,24 @@ else {
 咖啡";
   $youtubeid   = 'BMdmGhR6ooI';
   $vid         = 'VID20250324112600';
+  
+  $sql = "select * from SpeciesMain;";
+  mysqli_set_charset($conn,"utf8");
+  $result = $conn->query($sql);
+//echo "$sql;num=".$result->num_rows."<br>";
+  if ($result->num_rows > 0) {
+  // output data of each row
+    while($row = $result->fetch_assoc()) {
+//      echo $row["cname"]. "_".$row["arithaiid"]."_".$row["youtubetext"]."_".$row["youtubeid"]."_".$row["vid"]. "<br>";
+      $cname       =  $row["cname"];
+      $arithaino   =  $row["arithaiid"];
+      $youtubetext =  $row["youtubetext"];
+      $youtubeid   =  $row["youtubeid"];
+      $vid         =  $row["vid"];
+//  $sql2 = "update Species set vid='$cnt',youtubeid='咖啡' where cname='$cname';";
+      echo "<a href=species2.php?cname=$cname>$cname</a><br>";
+    }
+  } 
 }   
 //echo "rows:".$result->num_rows,"<br>\n";
 //echo "cname=$cname,ipc=$ipc<br>";
@@ -69,16 +90,16 @@ echo "
 if(!empty($youtubetext)) {
   $sql2 = "select * from SpeciesYoutube where cname='$cname' order by arithaino;";
   $result2 = $conn->query($sql2);
-//echo "$sql;num=".$result->num_rows."<br>";
+//  echo "$sql;num=".$result2->num_rows."<br>";
   if ($result2->num_rows > 0) {
   // output data of each row
-    while($row2 = $result->fetch_assoc()) {
+    while($row2 = $result2->fetch_assoc()) {
 //    echo $row["cname"]. "_".$row["arithaiid"]."_".$row["youtubetext"]."_".$row["youtubeid"]."_".$row["vid"]. "<br>";
       $cname       =  $row2["cname"];
       $arithaino   =  $row2["arithaino"];
       $youtubeid   =  $row2["youtubeid"];
       $vid         =  $row2["vid"];
-      echo "<iframe width='315' height='560' src='https://www.youtube.com/embed/$$youtubeid' ";
+      echo "<iframe width='315' height='560' src='https://www.youtube.com/embed/$youtubeid' ";
       echo "title='$vid'";
       echo "allow='accelerometer; autoplay; clipboard-write; 
                    encrypted-media; gyroscope; picture-in-picture; web-share'";

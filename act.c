@@ -891,7 +891,7 @@ extern int rn[2][2],gn[2][2],bn[2][2];
 extern int rb[2][2],gb[2][2],bb[2][2];
 extern int re,ge,be,ra,ga,ba;
 #undef a(v)
-#define a(v) (v>64? 255:0)   
+#define a(v) (v>128? 255:0)   
 void calc_matrix(int x,int y) {
   int x2,y2,x0,y0,Y,U,V,r11,g11,b11,r11a,g11a,b11a;
   x0 = x-1;if(x0<0) x0=0;
@@ -1016,8 +1016,6 @@ void calc_matrix(int x,int y) {
 }
 
 extern int frameWidth,frameHeight;
-#undef a(v)
-#define a(v) (v>32? 255:0)   
 void calc_nb(int x,int y) {
   int x2,y2,x0,y0,Y,U,V,r11,g11,b11,r11a,g11a,b11a;
   int pos;
@@ -1099,4 +1097,41 @@ void calc_nb(int x,int y) {
      abs(b11a-a(bn[1][0]))                      +abs(b11a-a(bn[1][2]))+
      abs(b11a-a(bn[2][0]))+abs(b11a-a(bn[2][1]))+abs(b11a-a(bn[2][2]));
 }
+
+extern unsigned char *Yref;
+extern unsigned char *Uref;
+extern unsigned char *Vref;
+#define ax(v) (v>72? 255:0)  
+void calc_ref(int frame_index,int width,int height) {
+  int x,y,x2,y2,g,R1,G1,B1,R0,G0,B0;
+  for (y = 0; y < height; y++)  {
+    y2 = y/2;
+    for (x = 0; x < width; x++) {
+      x2 = x/2;
+      if(frame_index>0) {
+        calc_nb(x,y);
+    //frame_index > 0 LBM Lattice Boltzmann method
+        R1 = rn[1][1]; G1 = gn[1][1]; B1 = bn[1][1];
+        R0 = rb[1][1]; G0 = gb[1][1]; B0 = bb[1][1];
+        g=abs(a(G0)-a(G1));
+        if(ge> 8 && abs(ax(G1)-ax(G0)) > 8 ) { //變動且是邊界
+          Yref[y* Ylinesize + x]   = BLACKY;                
+          Uref[y2* Ulinesize + x2] = BLACKU;
+          Vref[y2* Vlinesize + x2] = BLACKV;
+        }  
+        else {
+          Yref[y* Ylinesize + x]   = WHITEY;                
+          Uref[y2* Ulinesize + x2] = WHITEU;
+          Vref[y2* Vlinesize + x2] = WHITEV;
+        }
+      }
+      else {
+        Yref[y* Ylinesize + x]   = Ydiffnow[y *  Ylinesize + x];
+        Uref[y2* Ulinesize + x2] = Udiffnow[y2 * Ulinesize + x2];
+        Vref[y2* Vlinesize + x2] = Vdiffnow[y2 * Vlinesize + x2];      
+      }
+    }
+  }
+}
+
 

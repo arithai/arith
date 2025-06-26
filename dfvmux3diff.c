@@ -672,22 +672,9 @@ void copyFrame_now(int frame_index) {
         Vdiffnow[y2* Vlinesize + x2] = WHITEV;
 //      printf("%s(%d),%4d,%4d,%5d,%5d,%5d,%5d,%5d,%5d\n",__FILE__,__LINE__,y,x,Y,U,V,r,g,b);
       }
-      if(frame_index) {
-//frame_index > 0 LBM Lattice Boltzmann method
-        Yref[y* Ylinesize + x]     = abs(gb[1][1]-gn[1][1]);
-        Uref[y/2* Ulinesize + x/2] = 0;
-        Vref[y/2* Vlinesize + x/2] = 0;
-      }
-      else {
-        Yref[y* Ylinesize + x]     = Ydiffnow[y * Ylinesize + x];
-        Uref[y/2* Ulinesize + x/2] = Udiffnow[y/2 * Ulinesize + x/2];
-        Vref[y/2* Vlinesize + x/2] = Vdiffnow[y/2 * Vlinesize + x/2];      
-      }  
     }
   }    
 #endif  
-
-
 }
 
 void copyFrame() {

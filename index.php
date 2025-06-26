@@ -183,8 +183,6 @@
 <head>
 <meta http-equiv='Content-Type' content='text/html; charset=big5' />
 <meta http-equiv='expires' content='-1'>
-<script async src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5461330248394994'
-     crossorigin='anonymous'></script>
 <title>".$IDT[$IDii].",arithai.com,2025
 </title>
 </head>
@@ -204,7 +202,7 @@
 
       $fdata.="
 <img src=a5.gif alt='Guest Book' border=0>
-<a href='/page/guestbook.php'>-討論區<font size=+3>GuestBook</a></a><br>"
+<a href='page/guestbook.php'>-討論區<font size=+3>GuestBook</a></a><br>"
 ;
 
       if($isGen==1) { 
@@ -236,7 +234,7 @@
 
       $fdata.="
 <img src=a5.gif alt='Guest Book' border=0>
-<a href='/page/guestbook.php'>-討論區GuestBook</a><br>"
+<a href='page/guestbook.php'>-討論區GuestBook</a><br>"
 ;
 
       if($isGen==1) { 
@@ -300,7 +298,7 @@ print $title;
 </title>
 </head>
 <body background=<?php print $udir."/back0.gif" ?>>
-最新資訊,2025.01.08&nbsp;&nbsp;
+最新資訊,2025.06.20&nbsp;&nbsp;
 [<a href=
 http://<?php 
 if( isset( $_SERVER['SERVER_NAME'] ) && !empty( $_SERVER['SERVER_NAME'] )
@@ -315,9 +313,12 @@ if( isset( $_SERVER['REQUEST_URI'] ) && !empty( $_SERVER['REQUEST_URI'] )
 <td colspan=2 align=center bgcolor=#AAFFFF><font size=+2>
 
 <?php
-print $description;
-?>,<a href=https://www.youtube.com/@arithai>植物影音</a>,
-<a href=https://www.youtube.com/@arithai/shorts>短片</a><br><!--樹網(tree net) ---  description 可變!   ---->
+print "[".$description;
+?>]
+&nbsp;<a href=https://www.youtube.com/@arithai>植物影音</a>
+&nbsp;<a href=https://www.youtube.com/@arithai/shorts>短片</a><!--樹網(tree net) ---  description 可變!   ---->
+&nbsp;<a href=http://arith.online>ARITH.ONLINE</a>
+&nbsp;<a href=https://5price.blogspot.com>5PRICE屋價網</a><br>
 <hr> 
 <?php
 function upload_back() { 
