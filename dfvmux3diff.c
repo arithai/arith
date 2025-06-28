@@ -603,7 +603,7 @@ static AVFrame *get_video_frame(OutputStream *ost)
                   ost->frame->linesize);
     } else {
         printf("%s(%d)%d,(%d,%d)\n",__FILE__,__LINE__,ost->next_pts,c->width, c->height);
-#if 0
+#if 1
         calc_histogram(ost->frame, ost->next_pts, c->width, c->height);
         calc_64x36(ost->frame, ost->next_pts, c->width, c->height);
         initLineList(c->width, c->height);

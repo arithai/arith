@@ -313,13 +313,18 @@ void freeLineList() {
 #define MAX_JUMP_LINE 12
 bool marginalLine(int x,int y) {
   int diff,i,x0,y0;
+
+//  if(x==538 &&  y==598)
+//    printf("%s(%d)\n",__FILE__,__LINE__);
+
   for (i=0;i<maxDeltaSpace;i++) {
     x0=x-i;
     y0=y-i;
     if(x0>0 && y0>0) { //v change!
+
       diff=abs(
-        filt_frame->data[2][(y0-1) * filt_frame->linesize[0] + x0    ]+
-        filt_frame->data[2][     y0* filt_frame->linesize[1] + (x0-1)]-
+        filt_frame->data[0][(y0-1) * filt_frame->linesize[0] + x0    ]+
+        filt_frame->data[1][     y0* filt_frame->linesize[1] + (x0-1)]-
       2*filt_frame->data[2][     y0* filt_frame->linesize[2] + x0    ]);
     //printf("%s(%d) diff=%d\n",__FILE__,__LINE__,diff);
       if(diff > MAX_JUMP_LINE) 
@@ -497,7 +502,7 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
     if(lnListNext==NULL) break;
     lnList=lnListNext;  
   }  
-  printf("%s(%d)fi=%3d,y=%d,(%d,%d),%d\n",__FILE__,__LINE__,Yfi,YposLine,Yc0,Yc1,Yw);
+//  printf("%s(%d)fi=%3d,y=%d,(%d,%d),%d\n",__FILE__,__LINE__,Yfi,YposLine,Yc0,Yc1,Yw);
   
   //X     
   lnListNext=lnHead;   
@@ -512,6 +517,9 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
     countJump=0;  
     for (y = edgeSpace+maxDeltaSpace; y < height/2-edgeSpace-1; y++) {      
 #if 1      
+//    printf("%s(%d) (%4d,%4d)\n",__FILE__,__LINE__,y,x);
+      if(Xfi>1 && x==538 &&  y>597)
+//    printf("%s(%d)fi=%3d,x=(%4d,%4d),ypos=%4d,(%d,%d),(%d,countJump=%d)\n",__FILE__,__LINE__,Yfi,x,y,YposLine,c0,c1,w,countJump);        
       Y =  filt_frame->data[0][y*2 * filt_frame->linesize[0] + x*2];
       U =  filt_frame->data[1][y * filt_frame->linesize[1] + x];
       V =  filt_frame->data[2][y * filt_frame->linesize[2] + x];
@@ -523,8 +531,13 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
 //    if(x>410) exit(0);
       R = R; G= G; B = B;       
 #endif        
-//    printf("%s(%d)fi=%3d,x=(%4d,%4d),ypos=%4d,(%d,%d),(%d,countJump=%d)\n",__FILE__,__LINE__,Yfi,x,y,YposLine,c0,c1,w,countJump);        
+//    if(Xfi>1 && x==538 &&  y==598)
+//      printf("%s(%d),fi=%3d,(%4d,%4d),(%4d,%4d)\n",__FILE__,__LINE__,Yfi,x,y,
+//             width/2,height/2);
       if(marginalLine(x,y)){
+//      if(Xfi>1 && x==538 &&  y==598)
+//        printf("%s(%d),fi=%3d,(%4d,%4d),(%4d,%4d)\n",__FILE__,__LINE__,Yfi,x,y,
+//               width/2,height/2);
         if(isStart) {
           isStart=false;
           w=1;
@@ -542,7 +555,7 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
         if(isStart==false) { 
           if(countJump) {
             countJump++;
-//          printf("%s(%d) countJump=%4d",__FILE__,__LINE__,countJump);
+//          printf("%s(%d) countJump=%4d %X\n",__FILE__,__LINE__,countJump,lnList);
             if(countJump>maxDeltaSpace) {
               if(w>(Xw+2)) {
                 Xw=w;
@@ -555,13 +568,14 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
               }  
               countJump=0;         
               isStart=true;
-//            printf("%s(%d)fi=%3d,x=(%4d,%4d),xpos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Xfi,x,y,XposLine,Xc0,Xc1,w,Xw);        
+ //             printf("%s(%d)fi=%3d,x=(%4d,%4d),xpos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Xfi,x,y,XposLine,Xc0,Xc1,w,Xw);        
 //            if(Xw>100) exit(0);
             }            
           }  
         }
       }
     }
+//    printf("%s(%d)fi=%3d,x=(%4d,%4d),xpos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Xfi,x,y,XposLine,Xc0,Xc1,w,Xw);        
     if(w>(Xw+2)) {
       Xw=w;
       lnList->L.w=Xw;
