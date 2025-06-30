@@ -183,6 +183,9 @@ extern int frameWidth,frameHeight;
 extern unsigned char *Ybefore;
 extern unsigned char *Ubefore;
 extern unsigned char *Vbefore;
+extern unsigned char *Ynow;
+extern unsigned char *Unow;
+extern unsigned char *Vnow;
 extern unsigned char *Rbefore;
 extern unsigned char *Gbefore;
 extern unsigned char *Bbefore;
@@ -195,11 +198,12 @@ extern unsigned char *Bnow;
 extern int Ylinesize,Ulinesize,Vlinesize;
 bool marginal(x,y) {
   int diff;
+//printf("%s(%d) (%4d,%4d)\n",__FILE__,__LINE__,x,y);
   if(x>0 && y>0) { //v change!
     diff=abs(
-       filt_frame->data[2][(y-1) * filt_frame->linesize[2] + x    ]+
-       filt_frame->data[2][     y* filt_frame->linesize[2] + (x-1)]-
-     2*filt_frame->data[2][     y* filt_frame->linesize[2] + x    ]);
+       Vnow[(y-1) * filt_frame->linesize[2] + x    ]+
+       Vnow[     y* filt_frame->linesize[2] + (x-1)]-
+     2*Vnow[     y* filt_frame->linesize[2] + x    ]);
 //  printf("%s(%d) diff=%d\n",__FILE__,__LINE__,diff);
     if(diff > MAX_JUMP) 
      return true;  
@@ -415,7 +419,7 @@ int wp,
     ;
 void FindXYZSTLineList(AVFrame *pict, int frame_index,
                        int width, int height) { //60x60
-  int Y,U,V,R,G,B;
+  int pos,Y,U,V,R,G,B;
   int c0,c1,w,countJump;
   bool isStart;
   ST_LINE_LIST *lnList,*lnListNext;
@@ -438,16 +442,17 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
     countJump=0;  
     for (x = edgeSpace+maxDeltaSpace; x < width/2-edgeSpace-1; x++) {      
 #if 1      
-      Y =  filt_frame->data[0][y*2 * filt_frame->linesize[0] + x*2];
-      U =  filt_frame->data[1][y * filt_frame->linesize[1] + x];
-      V =  filt_frame->data[2][y * filt_frame->linesize[2] + x];
-      R = YUV2R(Y,U,V);
-      G = YUV2G(Y,U,V);
-      B = YUV2B(Y,U,V);
+//    Y =  filt_frame->data[0][y*2 * filt_frame->linesize[0] + x*2];
+//    U =  filt_frame->data[1][y * filt_frame->linesize[1] + x];
+//    V =  filt_frame->data[2][y * filt_frame->linesize[2] + x];
+      pos = y*2 * filt_frame->linesize[0] + x*2;
+      R = Rnow[pos]; //YUV2R(Y,U,V);
+      G = Gnow[pos]; //YUV2G(Y,U,V);
+      B = Bnow[pos]; //YUV2B(Y,U,V);
 //    printf("%s(%d) (%4d,%4d) yuv (%3d,%3d,%3d) rgb (%3d,%3d,%3d)\n",__FILE__,__LINE__,
 //           x,y,Y,U,V,R,G,B);
 //    if(x>410) exit(0);
-      R = R; G= G; B = B;       
+      R = R; G= G; B = B;  //no use RGB     
 #endif        
 //    printf("%s(%d)fi=%3d,x=(%4d,%4d),ypos=%4d,(%d,%d),(%d,countJump=%d)\n",__FILE__,__LINE__,Yfi,x,y,YposLine,c0,c1,w,countJump);        
       if(marginalLine(x,y)){

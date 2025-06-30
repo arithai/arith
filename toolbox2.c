@@ -100,6 +100,9 @@ int frameWidth,frameHeight;
 extern unsigned char *Ybefore;
 extern unsigned char *Ubefore;
 extern unsigned char *Vbefore;
+extern unsigned char *Ynow;
+extern unsigned char *Unow;
+extern unsigned char *Vnow;
 extern unsigned char *Ydiffnow;
 extern unsigned char *Udiffnow;
 extern unsigned char *Vdiffnow;
@@ -188,8 +191,8 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
     int x0, y0, x2, y2;
     int x30,y30,xs60,ys60;           
     int Y0,U0,V0,Y1,U1,V1,R0,G0,B0,G1,R1,B1;
-    int pos;
-#if 0
+    int pos,posU,posV;
+#if 1
     int Xmid=(Xleft+Xright)/2;
     int Ymid=(Yup+Ydown)/2;
 #endif    
@@ -222,53 +225,77 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
     for (y = 0; y < height; y++) {
       y30=y/ys60;
       y30=y30;
-      if((y/2)==Sy0) {
+      y2=y/2;
+      if(y2==Sy0) {
 //      exit(0);
       }
       for (x = 0; x < width; x++) {
-//        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
         x30=x/xs60;
-        x30=x30; 
-        #if 0
-//      if(x>Xmax-10&&x<Xmax+10&&y>Ymax-10&&y<Ymax+10) {
-        if(x>Xmid-10&&x<Xmid+10&&y>Ymid-10&&y<Ymid+10) {
-          pict->data[0][y * pict->linesize[0] + x] = 0x0;
+        x30=x30;
+        x2=x/2;
+        pos = y * Ylinesize+ x; 
+        posU=y2 * Ulinesize + x2; 
+        posV=y2 * Vlinesize + x2; 
+        R1=Rnow[pos];G1=Gnow[pos];B1=Bnow[pos];
+        Y1=Ynow[pos];
+        U1=Unow[posU];
+        V1=Vnow[posV];
+        pos = y * pict->linesize[0]+ x; 
+        posU=y2 * pict->linesize[1] + x2; 
+        posV=y2 * pict->linesize[2] + x2; 
+        if(false) {
         }
-        #endif
-//        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
         #if 1
-        if(    (y/2 >= YposLine && y/2 < (YposLine+5) && x/2>=Yc0 && x/2<=Yc1) 
-            || (x/2 >= XposLine && x/2 < (XposLine+5) && y/2>=Xc0 && y/2<=Xc1)
-            || (x/2 >= ZposLine && x/2 < (ZposLine+5) && y/2>=Zc0 && y/2<=Zc1)
-            ) {
- //         printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
-          pict->data[0][y * pict->linesize[0] + x] = 0xFF;
+//      if(x>Xmax-10&&x<Xmax+10&&y>Ymax-10&&y<Ymax+10) {
+        else if(x>Xmid-10&&x<Xmid+10&&y>Ymid-10&&y<Ymid+10) {
+          pict->data[0][pos]  = 0x0;
+          pict->data[1][posU] = 0xFF;
+          pict->data[2][posV] = 0x0;
         }
         #endif
-        #if 0
-        else if(marginal(x/2,y/2) || HXYV[x30/2][y30/2] >= ptFirst->pt.w) {
-//          printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
-          pict->data[0][y * pict->linesize[0] + x] = 0x0;
+        #if 1
+        else 
+        if( (y2 >= YposLine && y2 < (YposLine+5) && x2>=Yc0 && x2<=Yc1) 
+         || (x2 >= XposLine && x2 < (XposLine+5) && y2>=Xc0 && y2<=Xc1)
+         || (x2 >= ZposLine && x2 < (ZposLine+5) && y2>=Zc0 && y2<=Zc1)
+            ) {
+//        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
+          pict->data[0][pos]  = 0xFF;
+          pict->data[1][posU] = 0x00;
+          pict->data[2][posV] = 0xFF;
+        }
+        #endif
+        #if 1
+        else if(marginal(x2,y2)) {
+          pict->data[0][pos]  = 0x0;
+          pict->data[1][posU] = 0x33;
+          pict->data[2][posV] = 0x88;
+        }
+        #endif
+        #if 1    
+        else if(HXYV[x30/2][y30/2] >= ptFirst->pt.w) {
+          pict->data[0][pos]  = 0x0;
+          pict->data[1][posU] = 0x22;
+          pict->data[2][posV] = 0x66;
         }
         #endif
         #if 0
 //      printf("%s(%d) %X,%X (%d,%d)\n",__FILE__,__LINE__,ptHead,ptFirst,x30,y30);
         else if(HXYV[x30/2][y30/2] >= ptFirst->pt.w ) {
-//          printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
-          pict->data[0][y * pict->linesize[0] + x] = 0x0;
+//        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
+          pict->data[0][pos]  = 0x0;
+          pict->data[1][posU] = 0xFF;
+          pict->data[2][posV] = 0x0;
         }
         #endif  
         else {
- //        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
-         if(frame_index>0) {
-            pict->data[0][y * pict->linesize[0] + x] = Ybefore[y * Ylinesize + x];
-          }
-          else {
-//            printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
-            pict->data[0][y * pict->linesize[0] + x] = Ydiffnow[y * Ylinesize + x];
-          }
-        }  
+ //       printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
+          pict->data[0][pos]  = Y1;
+          pict->data[1][posU] = U1;
+          pict->data[2][posV] = V1;
+        }
       }    
+//    printf("%s(%d)(%4d,%4d)(%5d,%5d,%5d)\n",__FILE__,__LINE__,y,x,pos,posU,posV);
     }
 #if 1 
     printf("%s(%d)[%4d],(%d,%d,%d)(%d,%d,%d)(%d,%d,%d)(%d,%d,%d,%d)(%d,%d,%d,%d)\n",
@@ -276,64 +303,6 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
     frame_index,XposLine,Xc0,Xc1,YposLine,Yc0,Yc1,ZposLine,Zc0,Zc1,
     SposSlope,Sc0,Sc1,Sy0,TposSlope,Tc0,Tc1,Ty0);
 #endif
-    /* Cb and Cr */
-    for (y2 = 0; y2 < height/2; y2++) {
-      y=y2*2;
-      y30=y/ys60;
- //ST     
-      for (x2 = 0; x2 < width/2; x2++) {
-        x=x2*2; 
-        x30=x/xs60;
-//      printf("%s(%d) (%4d,%4d)\n",__FILE__,__LINE__,y2,x2);
-        #if 0
-//      if(x>Xmax/2-10&&x<Xmax/2+10&&y>Ymax/2-10&&y<Ymax/2+10) {
-        if(x>Xmid/2-10&&x<Xmid/2+10&&y>Ymid/2-10&&y<Ymid/2+10) {
-          pict->data[1][y2 * pict->linesize[1] + x2] = 0xFF;
-          pict->data[2][y2 * pict->linesize[2] + x2] = 0x0;
-        }
-        #endif
-//      printf("%s(%d)\n",__FILE__,__LINE__);
-        #if 1
-        if(    (y >= YposLine && y < (YposLine+5) && x>=Yc0 && x<=Yc1) 
-            || (x >= XposLine && x < (XposLine+5) && y>=Xc0 && y<=Xc1)
-            || (x >= ZposLine && x < (ZposLine+5) && y>=Zc0 && y<=Zc1)
-             ) {
-  //        printf("%s(%d)\n",__FILE__,__LINE__);
-          pict->data[1][y2 * pict->linesize[1] + x2] = 0x00;
-          pict->data[2][y2 * pict->linesize[2] + x2] = 0xFF;
-          if(frame_index>30) 
-          {
-//          printf("%s(%d)(%4d)(%3d,%3d,%3d)\n",__FILE__,__LINE__,frame_index,XposLine,YposLine,ZposLine);; exit(0);
-          }  
-        }
-        #endif
-        #if 1
-        else if(marginal(x,y)) {
-//          printf("%s(%d)\n",__FILE__,__LINE__);
-          pict->data[1][y * pict->linesize[1] + x] = 0x33;
-          pict->data[2][y * pict->linesize[2] + x] = 0x88;
-        }
-        else 
-        if (HXYV[x30][y30] >= ptFirst->pt.w) {
-//          printf("%s(%d)\n",__FILE__,__LINE__);
-          pict->data[1][y * pict->linesize[1] + x] = 0x22;
-          pict->data[2][y * pict->linesize[2] + x] = 0x66;
-        }
-        #endif           
-        #if 0
-        else if(HXYV[x30][y30] >= ptFirst->pt.w) {
-//          printf("%s(%d)\n",__FILE__,__LINE__);
-          pict->data[1][y2 * pict->linesize[1] + x2] = 0xFF;
-          pict->data[2][y2 * pict->linesize[2] + x2] = 0x0;
-        }
-        #endif  
-        else {
-//          printf("%s(%d)\n",__FILE__,__LINE__);
-          pict->data[1][y2 * pict->linesize[1] + x2] = Udiffnow[y2 * Ulinesize + x2];
-          pict->data[2][y2 * pict->linesize[2] + x2] = Vdiffnow[y2 * Vlinesize + x2];          
-        }    
-      } 
-    }
     printf("%s(%d)\n",__FILE__,__LINE__);
     for (x0 = Sc0; x0 < Sc1; x0++) {
 //      printf("%s(%d)\n",__FILE__,__LINE__);

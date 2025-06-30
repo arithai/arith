@@ -128,12 +128,18 @@ static int video_stream_index = -1;
 
 AVFrame *filt_frame;
 int frameWidth,frameHeight;
+unsigned char *Ybeforediff=NULL;
+unsigned char *Ubeforediff=NULL;
+unsigned char *Vbeforediff=NULL;
 unsigned char *Ybefore=NULL;
 unsigned char *Ubefore=NULL;
 unsigned char *Vbefore=NULL;
 unsigned char *Ydiffnow=NULL;
 unsigned char *Udiffnow=NULL;
 unsigned char *Vdiffnow=NULL;
+unsigned char *Ynow=NULL;
+unsigned char *Unow=NULL;
+unsigned char *Vnow=NULL;
 unsigned char *Yref=NULL;
 unsigned char *Uref=NULL;
 unsigned char *Vref=NULL;
@@ -634,6 +640,9 @@ void copyFrame_now(int frame_index) {
     Ylinesize =  filt_frame->linesize[0];
     Ulinesize =  filt_frame->linesize[1];
     Vlinesize =  filt_frame->linesize[2];
+    Ynow = (unsigned char *)malloc(Ylinesize*frameHeight);
+    Unow = (unsigned char *)malloc(Ulinesize*frameHeight);
+    Vnow = (unsigned char *)malloc(Vlinesize*frameHeight);
     Ydiffnow = (unsigned char *)malloc(Ylinesize*frameHeight);
     Udiffnow = (unsigned char *)malloc(Ulinesize*frameHeight);
     Vdiffnow = (unsigned char *)malloc(Vlinesize*frameHeight);
@@ -655,6 +664,9 @@ void copyFrame_now(int frame_index) {
       calc_matrix(x,y);     
       x2 = x/2;
          
+      Ynow[y * Ylinesize + x]  = filt_frame->data[0][y * Ylinesize + x];
+      Unow[y2* Ulinesize + x2] = filt_frame->data[1][y2* Ulinesize + x2];
+      Vnow[y2* Vlinesize + x2] = filt_frame->data[2][y2* Vlinesize + x2];
 //    if(ga > 128 && ba > 32) {
 //    if(ga > 128) {
 //    if(ge > 16 && ba > 16) {
@@ -677,7 +689,7 @@ void copyFrame_now(int frame_index) {
 #endif  
 }
 
-void copyFrame() {
+void copyFramebefore() {
   int x,y,x2,y2;
   if(Ybefore == NULL) {
     frameWidth    = filt_frame->width;
@@ -688,43 +700,20 @@ void copyFrame() {
     Ybefore = (unsigned char *)malloc(Ylinesize*frameHeight);
     Ubefore = (unsigned char *)malloc(Ulinesize*frameHeight);
     Vbefore = (unsigned char *)malloc(Vlinesize*frameHeight);
+    Ybeforediff = (unsigned char *)malloc(Ylinesize*frameHeight);
+    Ubeforediff = (unsigned char *)malloc(Ulinesize*frameHeight);
+    Vbeforediff = (unsigned char *)malloc(Vlinesize*frameHeight);
   }
   for (y = 0; y < filt_frame->height; y++) {
     y2 = y/2;
     for (x = 0; x < filt_frame->width; x++) {
       x2 = x/2;
-      Ybefore[y  * Ylinesize + x] =  filt_frame->data[0][y * Ylinesize + x];
-      Ubefore[y2 * Ulinesize + x2] = filt_frame->data[1][y2* Ulinesize + x2];
-      Vbefore[y2 * Vlinesize + x2] = filt_frame->data[2][y2* Vlinesize + x2];
-    }  
-  }    
-}
-
-void copyFrame_diffnow() {
-  int x,y,x2,y2;
-  if(Ybefore == NULL) {
-    frameWidth    = filt_frame->width;
-    frameHeight   = filt_frame->height;
-    Ylinesize =  filt_frame->linesize[0];
-    Ulinesize =  filt_frame->linesize[1];
-    Vlinesize =  filt_frame->linesize[2];   
-    Ybefore = (unsigned char *)malloc(Ylinesize*frameHeight);
-    Ubefore = (unsigned char *)malloc(Ulinesize*frameHeight);
-    Vbefore = (unsigned char *)malloc(Vlinesize*frameHeight);
-    Rbefore = (unsigned char *)malloc(Ylinesize*frameHeight);
-    Gbefore = (unsigned char *)malloc(Ylinesize*frameHeight);
-    Bbefore = (unsigned char *)malloc(Ylinesize*frameHeight);
-  }  
-  for (y = 0; y < filt_frame->height; y++) {
-    y2 = y/2;
-    for (x = 0; x < filt_frame->width; x++) {
-      x2 = x/2;
-      Ybefore[y * Ylinesize + x]  = Ydiffnow[y  * Ylinesize + x];
-      Ubefore[y2* Ulinesize + x2] = Udiffnow[y2 * Ulinesize + x2];
-      Vbefore[y2* Vlinesize + x2] = Vdiffnow[y2 * Vlinesize + x2];
-      Rbefore[y * Ylinesize + x] = Rnow[y * Ylinesize + x];
-      Gbefore[y * Ylinesize + x] = Gnow[y * Ylinesize + x];
-      Bbefore[y * Ylinesize + x] = Bnow[y * Ylinesize + x];
+      Ybefore[y  * Ylinesize + x] =  Ynow[y * Ylinesize + x];
+      Ubefore[y2 * Ulinesize + x2] = Unow[y2* Ulinesize + x2];
+      Vbefore[y2 * Vlinesize + x2] = Vnow[y2* Vlinesize + x2];
+      Ybeforediff[y  * Ylinesize + x] =  Ydiffnow[y * Ylinesize + x];
+      Ubeforediff[y2 * Ulinesize + x2] = Udiffnow[y2* Ulinesize + x2];
+      Vbeforediff[y2 * Vlinesize + x2] = Vdiffnow[y2* Vlinesize + x2];
     }  
   }    
 }
@@ -1122,10 +1111,8 @@ int main(int argc, char **argv)
                     } else {
                         printf("else encode_audio %s(%d)\n",__FILE__,__LINE__);
                         encode_audio = !write_audio_frame(oc, &audio_st);
-                    }
-                    copyFrame_diffnow();
-                    
-//                  copyFrame();
+                    }                 
+                    copyFramebefore();
 #endif
 //                  av_frame_unref(filt_frame);
                 }
