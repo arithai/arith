@@ -43,6 +43,16 @@
 #define BLACKY 0
 #define BLACKU 128
 #define BLACKV 128
+#define REDY 76
+#define REDU 84
+#define REDV 255
+#define GREENY 149
+#define GREENU 43
+#define GREENV 21
+#define BLUEY 29
+#define BLUEU 255
+#define BLUEV 107
+
     
 #define GLOBAL_WIDTH  640*6
 #define GLOBAL_HEIGHT 360*6
@@ -62,8 +72,9 @@ void ptSet(unsigned short x,unsigned short y,int weight);
 void ptFree();
 void ptListAll();
 #define maxFirst 32
-extern ST_POINT_LIST *ptFirst;
+extern ST_POINT_LIST *ptFirst,*ptFirstG;
 void ptGetFirst();
+void ptGetFirstG();
 #include <string.h>
 #include <math.h>
 #include <libavutil/avassert.h>
@@ -113,9 +124,12 @@ extern unsigned char *Rnow;
 extern unsigned char *Gnow;
 extern unsigned char *Bnow;
 extern int Ylinesize,Ulinesize,Vlinesize;
-extern bool marginal(int x,int y);
-extern int HXYV[60][60];
-extern int HXYY[30][30];
+extern bool marginalV(int x,int y);
+extern int HXYR[60][60];
+extern int HXYG[60][60];
+extern int HXYB[60][60];
+extern int HXYY[60][60];
+extern int HXYV[30][30];
 extern int HXYU[30][30];
 extern int EX[3840];
 extern int EY[3840];
@@ -184,6 +198,9 @@ extern int rn[2][2],gn[2][2],bn[2][2];
 extern int rb[2][2],gb[2][2],bb[2][2];
 extern int re,ge,be,ra,ga,ba;
 #define a(v) (v<128? 0:255)  
+#define BLUEY 29
+#define BLUEU 255
+#define BLUEV 107
 void fill_yuv_image(AVFrame *pict, int frame_index,
                     int width, int height)
 {
@@ -207,6 +224,7 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
         );  
 #endif     
     ptGetFirst();       
+    ptGetFirstG();       
     printf("%s(%d) (%d,%d)\n",__FILE__,__LINE__,xs60,ys60);
 #if 0
     /* Y */
@@ -243,49 +261,54 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
         pos = y * pict->linesize[0]+ x; 
         posU=y2 * pict->linesize[1] + x2; 
         posV=y2 * pict->linesize[2] + x2; 
+//      printf("%s(%d)(%4d,%4d) (%6d,%6d))\n",__FILE__,__LINE__,y,x,HXYG[x30][y30],ptFirstG->pt.w);
         if(false) {
         }
         #if 1
-//      if(x>Xmax-10&&x<Xmax+10&&y>Ymax-10&&y<Ymax+10) {
         else if(x>Xmid-10&&x<Xmid+10&&y>Ymid-10&&y<Ymid+10) {
-          pict->data[0][pos]  = 0x0;
-          pict->data[1][posU] = 0xFF;
-          pict->data[2][posV] = 0x0;
+          pict->data[0][pos]  = BLACKY; //0x0;  //BLUE
+          pict->data[1][posU] = BLACKU; //0xFF;
+          pict->data[2][posV] = BLACKV; //0x0;
         }
         #endif
-        #if 1
-        else 
-        if( (y2 >= YposLine && y2 < (YposLine+5) && x2>=Yc0 && x2<=Yc1) 
-         || (x2 >= XposLine && x2 < (XposLine+5) && y2>=Xc0 && y2<=Xc1)
-         || (x2 >= ZposLine && x2 < (ZposLine+5) && y2>=Zc0 && y2<=Zc1)
+        #if 0
+        else if( (y2 >= YposLine && y2 < (YposLine+5) && x2>=Yc0 && x2<=Yc1) 
+              || (x2 >= XposLine && x2 < (XposLine+5) && y2>=Xc0 && y2<=Xc1)
+              || (x2 >= ZposLine && x2 < (ZposLine+5) && y2>=Zc0 && y2<=Zc1)
             ) {
 //        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
-          pict->data[0][pos]  = 0xFF;
+          pict->data[0][pos]  = 0xFF; //YELLOW
           pict->data[1][posU] = 0x00;
           pict->data[2][posV] = 0xFF;
         }
         #endif
         #if 1
-        else if(marginal(x2,y2)) {
-          pict->data[0][pos]  = 0x0;
+        else if(marginalV(x2,y2)) {
+          pict->data[0][pos]  = 0x0;  //BLACK
           pict->data[1][posU] = 0x33;
           pict->data[2][posV] = 0x88;
         }
         #endif
-        #if 1    
+        #if 0  
         else if(HXYV[x30/2][y30/2] >= ptFirst->pt.w) {
-          pict->data[0][pos]  = 0x0;
-          pict->data[1][posU] = 0x22;
+          pict->data[0][pos]  = 0x0;   //GREEN
+          pict->data[1][posU] = 0x22;  //correlated line 
           pict->data[2][posV] = 0x66;
         }
         #endif
-        #if 0
-//      printf("%s(%d) %X,%X (%d,%d)\n",__FILE__,__LINE__,ptHead,ptFirst,x30,y30);
+        #if 1
         else if(HXYV[x30/2][y30/2] >= ptFirst->pt.w ) {
-//        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
-          pict->data[0][pos]  = 0x0;
-          pict->data[1][posU] = 0xFF;
-          pict->data[2][posV] = 0x0;
+          pict->data[0][pos]  = BLUEY;   //BLUE
+          pict->data[1][posU] = BLUEU;
+          pict->data[2][posV] = BLUEV;
+        }
+        #endif  
+        #if 1
+        else if(HXYG[x30][y30] >= ptFirstG->pt.w ) {
+//        printf("%s(%d)(%4d,%4d) (%6d,%6d) <======\n",__FILE__,__LINE__,y,x,HXYG[x30][y30],ptFirstG->pt.w);
+          pict->data[0][pos]  = REDY;   
+          pict->data[1][posU] = REDU;
+          pict->data[2][posV] = REDV;
         }
         #endif  
         else {
@@ -297,45 +320,49 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
       }    
 //    printf("%s(%d)(%4d,%4d)(%5d,%5d,%5d)\n",__FILE__,__LINE__,y,x,pos,posU,posV);
     }
-#if 1 
+    #if 1 
     printf("%s(%d)[%4d],(%d,%d,%d)(%d,%d,%d)(%d,%d,%d)(%d,%d,%d,%d)(%d,%d,%d,%d)\n",
     __FILE__,__LINE__,
     frame_index,XposLine,Xc0,Xc1,YposLine,Yc0,Yc1,ZposLine,Zc0,Zc1,
     SposSlope,Sc0,Sc1,Sy0,TposSlope,Tc0,Tc1,Ty0);
-#endif
+    #endif
     printf("%s(%d)\n",__FILE__,__LINE__);
+    #if 1
     for (x0 = Sc0; x0 < Sc1; x0++) {
 //      printf("%s(%d)\n",__FILE__,__LINE__);
       y0=(int)(Sy0+x0*ratioS);
       for (y=0;y<5;y++) {
         if(y0<(height/2-1)) {
 //        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,x0,y0);
-          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0]   = 29;
-          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0+1] = 29;
-          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0]   = 29;
-          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0+1] = 29;
-          pict->data[1][y0 * pict->linesize[1] + x0] = 255;
-          pict->data[2][y0 * pict->linesize[2] + x0] = 107;
+          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0]   = BLUEY;
+          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0+1] = BLUEY;
+          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0]   = BLUEY;
+          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0+1] = BLUEY;
+          pict->data[1][y0 * pict->linesize[1] + x0] = BLUEU;
+          pict->data[2][y0 * pict->linesize[2] + x0] = BLUEV;
           y0++;
         }  
       }          
-    } 
+    }
+    #endif
+    #if 1
     for (x0 = Tc0; x0 < Tc1; x0++) {
 //    printf("%s(%d)\n",__FILE__,__LINE__);
       y0=(int)(Ty0+x0*ratioT);
       for (y=0;y<5;y++) {
         if(y0>0) {
 //        printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,x0,y0);
-          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0]   = 29;
-          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0+1] = 29;
-          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0]   = 29;
-          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0+1] = 29;
-          pict->data[1][y0 * pict->linesize[1] + x0] = 255;
-          pict->data[2][y0 * pict->linesize[2] + x0] = 107;
+          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0]   = BLUEY;
+          pict->data[0][2*y0 *      pict->linesize[0] + 2*x0+1] = BLUEY;
+          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0]   = BLUEY;
+          pict->data[0][(2*y0+1) *  pict->linesize[0] + 2*x0+1] = BLUEY;
+          pict->data[1][y0 * pict->linesize[1] + x0] = BLUEU;
+          pict->data[2][y0 * pict->linesize[2] + x0] = BLUEV;
           y0--;
         }  
       }          
-    } 
+    }
+    #endif 
 #endif
 #if 0
     Xmid=800;Ymid=800;

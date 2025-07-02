@@ -95,9 +95,15 @@ ST_POINT_LIST *ptHead=NULL,*ptTail=NULL;
 void ptSet(unsigned short x,unsigned short y,int weight);
 void ptFree();
 void ptListAll(); 
+ST_POINT_LIST *ptHeadG=NULL,*ptTailG=NULL;
+void ptSetG(unsigned short x,unsigned short y,int weight);
+void ptFreeG();
+void ptListAllG(); 
 #define maxFirst 32
 ST_POINT_LIST *ptFirst;
 void ptGetFirst();
+ST_POINT_LIST *ptFirstG;
+void ptGetFirstG();
 char filter_descr[sizeof("scale=3840:2160,transpose=clock")];
 /* other way:
    scale=78:24 [scl]; [scl] transpose=cclock // assumes "[in]" and "[out]" to be input output pads respectively
@@ -182,14 +188,18 @@ static int write_frame(AVFormatContext *fmt_ctx, AVCodecContext *c,
                        AVStream *st, AVFrame *frame, AVPacket *pkt)
 {
     int ret;
+    printf("%s(%d) %X,%X,%X\n",__FILE__,__LINE__,c,frame,pkt);
+    if(frame==0) return 1;
     // send the frame to the encoder
     ret = avcodec_send_frame(c, frame);
+    printf("%s(%d) %X,%X,%X\n",__FILE__,__LINE__,c,frame,pkt);
     if (ret < 0) {
         fprintf(stderr, "Error sending a frame to the encoder: %s\n",
                 av_err2str(ret));
         exit(1);
     }
     while (ret >= 0) {
+        printf("%s(%d) %X,%X,%X\n",__FILE__,__LINE__,c,frame,pkt);
         ret = avcodec_receive_packet(c, pkt);
         printf("write_frame %s(%d) %d ret=%d,%d,%d\n",__FILE__,__LINE__,frame->data[0][2],ret,AVERROR(EAGAIN),AVERROR_EOF);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
@@ -579,6 +589,7 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
 static AVFrame *get_video_frame(OutputStream *ost)
 {
     AVCodecContext *c = ost->enc;
+    printf("%s(%d)\n",__FILE__,__LINE__);
     /* check if we want to generate more frames */
     if (av_compare_ts(ost->next_pts, c->time_base,
                       STREAM_DURATION, (AVRational){ 1, 1 }) > 0)
@@ -657,10 +668,16 @@ void copyFrame_now(int frame_index) {
            Ylinesize,Ulinesize,Vlinesize);
            
   }
+  if(frame_index==251) {
+    printf("%s(%d),(%4d,%4d),(%4d,%4d,%4d)\n",__FILE__,__LINE__,
+           frameWidth,frameHeight,
+           Ylinesize,Ulinesize,Vlinesize);
+  }
 #if 1
   for (y = 0; y < filt_frame->height; y++) {
     y2 = y/2;
     for (x = 0; x < filt_frame->width; x++) {
+
       calc_matrix(x,y);     
       x2 = x/2;
          
@@ -686,6 +703,11 @@ void copyFrame_now(int frame_index) {
       }
     }
   }    
+      if(frame_index==251) {
+        printf("%s(%d),(%4d,%4d),(%4d,%4d)\n",__FILE__,__LINE__,
+               filt_frame->height,filt_frame->width,
+               y,x);
+      }
 #endif  
 }
 
@@ -1107,11 +1129,14 @@ int main(int argc, char **argv)
                         copyFrame_now(video_st.next_pts);
                       //calc_edge(video_st.next_pts,video_st.enc->width, video_st.enc->height);
                         encode_video = !write_video_frame(oc, &video_st);
+                        if(encode_video==0 && !encode_audio) 
+                          goto end_video;
                     //  encode_audio = !write_audio_frame(oc, &audio_st);
                     } else {
                         printf("else encode_audio %s(%d)\n",__FILE__,__LINE__);
                         encode_audio = !write_audio_frame(oc, &audio_st);
                     }                 
+                    printf("%s(%d),%3d\n",__FILE__,__LINE__,video_st.next_pts);
                     copyFramebefore();
 #endif
 //                  av_frame_unref(filt_frame);
@@ -1135,6 +1160,8 @@ int main(int argc, char **argv)
         }
     }
 #endif
+end_video:
+    printf("%s(%d)\n",__FILE__,__LINE__);
     av_write_trailer(oc);
     /* Close each codec. */
     if (have_video)

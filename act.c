@@ -57,7 +57,7 @@ typedef struct STPONTLIST {
   ST_POINT pt;
   struct STPONTLIST *next;
 } ST_POINT_LIST;
-extern ST_POINT_LIST *ptHead,*ptTail;
+extern ST_POINT_LIST *ptHead,*ptTail,*ptHeadG,*ptTailG;
 void ptSet(unsigned short x,unsigned short y,int weight) {
 //printf("%s(%d)\n",__FILE__,__LINE__);  
   ST_POINT_LIST *ptList,*ptListNext,*ptListTemp;
@@ -125,6 +125,75 @@ void ptListAll() {
     ptList=ptListTemp;
   }
 }
+//G
+void ptSetG(unsigned short x,unsigned short y,int weight) {
+//printf("%s(%d)\n",__FILE__,__LINE__);  
+  ST_POINT_LIST *ptListG,*ptListGNext,*ptListGTemp;
+  ptListGNext=(ST_POINT_LIST *)malloc(sizeof(ST_POINT_LIST));
+  ptListGNext->pt.x=x;
+  ptListGNext->pt.y=y;
+  ptListGNext->pt.w=weight;
+  if(ptHeadG==NULL) {
+     ptHeadG=ptListGNext;
+     ptTailG=ptListGNext;
+     ptHeadG->next=NULL;
+     return;
+  }
+//printf("%s(%d)\n",__FILE__,__LINE__);  
+  ptListG=ptHeadG;
+  while(ptListG!=NULL && ptListG->pt.w>=weight) { //>=稱先到先贏   8,7,7,5
+//  printf("%s(%d)\n",__FILE__,__LINE__);  
+    if(ptListG->next!=NULL) {
+      if(ptListG->next->pt.w<weight) break;
+    }
+    ptListG = ptListG->next;
+  }
+//printf("%s(%d) %X %X\n",__FILE__,__LINE__,ptHead,ptList);  
+  if(ptListG==ptHeadG) {    //insert in Head
+    ptListGNext->next=ptHeadG;
+    ptHeadG=ptListGNext;
+//  printf("%s(%d) head %X %X\n",__FILE__,__LINE__,ptHead,ptList);  
+  }
+  else if(ptListG==NULL) { //insert in Tail
+    ptTailG->next=ptListGNext;
+    ptListGNext->next=NULL;
+    ptTailG=ptListGNext;
+//  printf("%s(%d) tail %X %X\n",__FILE__,__LINE__,ptHead,ptList);  
+  }
+  else {                  //insert in middle 
+    ptListGTemp=ptListG->next;
+    ptListG->next=ptListGNext;
+    ptListGNext->next=ptListGTemp;
+//  printf("%s(%d) middle %X %X\n",__FILE__,__LINE__,ptHead,ptList);  
+  }  
+}
+void ptFreeG() {
+  ST_POINT_LIST *ptListG,*ptListGTemp;
+  ptListG=ptHeadG;
+  while(ptListG!=NULL) { 
+    ptListGTemp=ptListG->next;
+    free(ptListG);
+    ptListG=ptListGTemp;
+  }
+  ptHeadG=NULL;
+  ptTailG=NULL;
+}
+void ptListAllG() {
+  ST_POINT_LIST *ptListG,*ptListGTemp;
+  int x30,y30;
+  ptListG=ptHeadG;
+  while(ptListG!=NULL) { //
+    if(ptListG->pt.w>104159) 
+    {
+      x30=ptListG->pt.x;y30=ptListG->pt.y;
+      x30=x30;y30=y30;
+//    printf("%s(%d) (%4d,%4d,%7d)\n",__FILE__,__LINE__,x30,y30,ptList->pt.w);
+    }    
+    ptListGTemp=ptListG->next;
+    ptListG=ptListGTemp;
+  }
+}
+//end G
 #define maxFirst 32
 ST_POINT_LIST *ptFirst;
 void ptGetFirst() {
@@ -147,6 +216,26 @@ void ptGetFirst() {
 //printf("%s(%d) %lX\n",__FILE__,__LINE__,(long)ptFirst);
 }
 
+ST_POINT_LIST *ptFirstG;
+void ptGetFirstG() {
+  ST_POINT_LIST *ptListG,*ptListGTemp;
+  int x30,y30;
+  int i=0;
+  ptListG=ptHeadG;
+  while(ptListG!=NULL && i<maxFirst) { 
+//  printf("%s(%d) %lX,%d\n",__FILE__,__LINE__,(long)ptListG,i);
+    if(ptListG->pt.w>380000) {
+      x30=ptListG->pt.x;y30=ptListG->pt.y;
+      x30=x30;y30=y30;
+//    printf("(%4d,%4d,%7d)\n",x30,y30,ptListG->pt.w);
+    }    
+    i++;    
+    ptListGTemp=ptListG->next;
+    ptListG=ptListGTemp;
+  }
+  ptFirstG=ptListG;
+//printf("%s(%d) %lX\n",__FILE__,__LINE__,(long)ptFirst);
+}
 #include <string.h>
 #include <math.h>
 #include <libavutil/avassert.h>
@@ -196,7 +285,7 @@ extern unsigned char *Rnow;
 extern unsigned char *Gnow;
 extern unsigned char *Bnow;
 extern int Ylinesize,Ulinesize,Vlinesize;
-bool marginal(x,y) {
+bool marginalV(x,y) {
   int diff;
 //printf("%s(%d) (%4d,%4d)\n",__FILE__,__LINE__,x,y);
   if(x>0 && y>0) { //v change!
@@ -210,16 +299,25 @@ bool marginal(x,y) {
   } 
   return false;
 }
-int HXYV[60][60];
-int HXYY[30][30];
+int HXYR[60][60];
+int HXYG[60][60];
+int HXYB[60][60];
+int HXYY[60][60];
 int HXYU[30][30];
+int HXYV[30][30];
 int EX[3840];
 int EY[3840];
 void calc_64x36(AVFrame *pict, int frame_index,
                 int width, int height) { //60x60
-  int x,y,x30,y30,x60,y60;
+  int x,y,x2,y2,x30,y30,x60,y60;
   int xs60,ys60;  
+  int pos,posU,posV;
   ptFree();    
+  ptFreeG();    
+  memset(HXYR,0,sizeof(HXYR));
+  memset(HXYG,0,sizeof(HXYG));
+  memset(HXYB,0,sizeof(HXYB));
+
   memset(HXYY,0,sizeof(HXYY));
   memset(HXYU,0,sizeof(HXYU));
   memset(HXYV,0,sizeof(HXYV));
@@ -239,18 +337,22 @@ void calc_64x36(AVFrame *pict, int frame_index,
     y60=y/ys60; 
     for (x = 0; x < width; x++) {
       x60=x/xs60;  
-      HXYY[x60][y60]+=filt_frame->data[0][y * filt_frame->linesize[0] + x];
+      pos=y * Ylinesize + x;
+      HXYY[x60][y60]+=Ynow[pos];
+      HXYR[x60][y60]+=Rnow[pos];
+      HXYG[x60][y60]+=Gnow[pos];
+      HXYB[x60][y60]+=Bnow[pos];
     }
   }      
-  for (y = 0; y < height/2; y++) {
-    y30=y/ys60; 
-    for (x = 0; x < width/2; x++) {
-      x30=x/xs60;  
-      HXYU[x30][y30]+=filt_frame->data[1][y * filt_frame->linesize[1] + x];  
-      HXYV[x30][y30]+=filt_frame->data[2][y * filt_frame->linesize[2] + x];  
-      if(marginal(x/2,y/2)) {
-        EX[x]++;;
-        EY[y]++;;
+  for (y2 = 0; y2 < height/2; y2++) {
+    y30=y2/ys60;
+    for (x2 = 0; x2 < width/2; x2++) {
+      x30=x2/xs60;  
+      HXYU[x30][y30]+=Unow[y2 * Ulinesize + x2];  
+      HXYV[x30][y30]+=Vnow[y2 * Vlinesize + x2];  
+      if(marginalV(x2,y2)) {
+        EX[x2]++;;
+        EY[y2]++;;
       }
     }
   }  
@@ -266,6 +368,19 @@ void calc_64x36(AVFrame *pict, int frame_index,
   }
   ptListAll();
   printf("calc_64x36 (%d,%d) %lX end\n",width,height,(long)ptHead);
+
+  for(y60=0;y60<60;y60++) {
+    for(x60=0;x60<60;x60++) {
+//    printf("%s(%d)\n",__FILE__,__LINE__);         
+      ptSetG((unsigned short) x60,(unsigned short) y60,HXYG[x60][y60]);
+      #if 0
+      if(HXYG[x60][y30]>380000) 
+        printf("(%4d,%4d,%7d)\n",x60*64*2,y60*36*2,HXYG[x60][y60]);
+      #endif  
+    }
+  }
+  ptListAllG();
+  printf("calc_64x36 (%4d,%4d) %lX end\n",width,height,(long)ptHeadG);
   return;
 }
 //邊緣,界,端點,起點,終點
