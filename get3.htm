@@ -1,0 +1,100 @@
+    <!DOCTYPE html> 
+    <html lang="en"> 
+    <head> 
+        <meta charset="UTF-8"> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+        <title>Get Image Pixel Data</title> 
+    </head> 
+    <body> <!--vidl0032 white   width=400 height=400 -->
+        <canvas id="myCanvas" style="display:none;"></canvas> 
+        <img id="myImage" src="jpg/vidl0032.jpg" alt="Image"  /> 
+        <p>X:<span id="x"></span></p>
+        <p>Y:<span id="y"></span></p>
+        <p>p:<span id="p"></span></p>
+        <script> 
+            const img = document.getElementById('myImage'); 
+            const canvas = document.getElementById('myCanvas'); 
+            const ctx = canvas.getContext('2d'); 
+     
+            img.onload = function() { 
+                // Set canvas size to image size 
+                canvas.width = img.width; 
+                canvas.height = img.height; 
+     
+                // Draw the image onto the canvas 
+                ctx.drawImage(img, 0, 0); 
+     
+                // Get pixel data 
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); 
+                const data = imageData.data; // This is a Uint8ClampedArray 
+     
+                // Example: Log the RGBA values of the pixel at (x, y) 
+                const x = 10; // example x-coordinate 
+                const y = 10; // example y-coordinate 
+                const index = (y * canvas.width + x) * 4; // Calculate index in the array 
+     
+                const r = data[index];     // Red 
+                const g = data[index + 1]; // Green 
+                const b = data[index + 2]; // Blue 
+                const a = data[index + 3]; // Alpha 
+     
+                console.log(`Pixel at (${x}, ${y}): R=${r}, G=${g}, B=${b}, A=${a}`); 
+            }; 
+
+
+function FindPosition(oElement)
+{
+  if(typeof( oElement.offsetParent ) != "undefined")
+  {
+    for(var posX = 0, posY = 0; oElement; oElement = oElement.offsetParent)
+    {
+      posX += oElement.offsetLeft;
+      posY += oElement.offsetTop;
+    }
+      return [ posX, posY ];
+    }
+    else
+    {
+      return [ oElement.x, oElement.y ];
+    }
+}
+
+var PosX = 0;
+var PosY = 0;
+function GetCoordinates(e)
+{
+  var ImgPos;
+  ImgPos = FindPosition(img);
+  if (!e) var e = window.event;
+  if (e.pageX || e.pageY)
+  {
+    PosX = e.pageX;
+    PosY = e.pageY;
+  }
+  else if (e.clientX || e.clientY)
+    {
+      PosX = e.clientX + document.body.scrollLeft
+        + document.documentElement.scrollLeft;
+      PosY = e.clientY + document.body.scrollTop
+        + document.documentElement.scrollTop;
+    }
+  PosX = PosX - ImgPos[0];
+  PosY = PosY - ImgPos[1];
+}
+
+img.onmousedown = function(e){
+  GetCoordinates();
+  document.getElementById("x").innerHTML = PosX;
+  document.getElementById("y").innerHTML = PosY;
+  x=PosX;
+  y=PosY;
+  imgData = ctx.getImageData(x, y, x+1, y+1);
+  r = imgData.data[0];
+  g = imgData.data[1];
+  b = imgData.data[2];
+  a = imgData.data[3];
+  document.getElementById("p").innerHTML = `Pixel at (${x}, ${y}): R=${r}, G=${g}, B=${b}, A=${a}`;
+}
+        </script> 
+    </body> 
+    </html> 
