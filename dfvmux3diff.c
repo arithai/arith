@@ -188,20 +188,20 @@ static int write_frame(AVFormatContext *fmt_ctx, AVCodecContext *c,
                        AVStream *st, AVFrame *frame, AVPacket *pkt)
 {
     int ret;
-    printf("%s(%d) %X,%X,%X\n",__FILE__,__LINE__,c,frame,pkt);
+  //printf("%s(%d) %X,%X,%X\n",__FILE__,__LINE__,c,frame,pkt);
     if(frame==0) return 1;
     // send the frame to the encoder
     ret = avcodec_send_frame(c, frame);
-    printf("%s(%d) %X,%X,%X\n",__FILE__,__LINE__,c,frame,pkt);
+  //printf("%s(%d) %X,%X,%X\n",__FILE__,__LINE__,c,frame,pkt);
     if (ret < 0) {
         fprintf(stderr, "Error sending a frame to the encoder: %s\n",
                 av_err2str(ret));
         exit(1);
     }
     while (ret >= 0) {
-        printf("%s(%d) %X,%X,%X\n",__FILE__,__LINE__,c,frame,pkt);
+      //printf("%s(%d) %X,%X,%X\n",__FILE__,__LINE__,c,frame,pkt);
         ret = avcodec_receive_packet(c, pkt);
-        printf("write_frame %s(%d) %d ret=%d,%d,%d\n",__FILE__,__LINE__,frame->data[0][2],ret,AVERROR(EAGAIN),AVERROR_EOF);
+      //printf("write_frame %s(%d) %d ret=%d,%d,%d\n",__FILE__,__LINE__,frame->data[0][2],ret,AVERROR(EAGAIN),AVERROR_EOF);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
             break;
         }    
@@ -639,8 +639,8 @@ static AVFrame *get_video_frame(OutputStream *ost)
 
 //unsigned char *filt_diffnow_buffer=NULL;
 //unsigned char *filt_before_buffer=NULL;
-int rn[2][2],gn[2][2],bn[2][2];
-int rb[2][2],gb[2][2],bb[2][2];
+int rn[3][3],gn[3][3],bn[3][3];
+int rb[3][3],gb[3][3],bb[3][3];
 int re,ge,be,ra,ga,ba;
 extern void calc_matrix(int x,int y);
 void copyFrame_now(int frame_index) {
@@ -725,7 +725,12 @@ void copyFramebefore() {
     Ybeforediff = (unsigned char *)malloc(Ylinesize*frameHeight);
     Ubeforediff = (unsigned char *)malloc(Ulinesize*frameHeight);
     Vbeforediff = (unsigned char *)malloc(Vlinesize*frameHeight);
+    
+    Rbefore = (unsigned char *)malloc(Ylinesize*frameHeight);
+    Gbefore = (unsigned char *)malloc(Ylinesize*frameHeight);
+    Bbefore = (unsigned char *)malloc(Ylinesize*frameHeight);
   }
+#if 0
   for (y = 0; y < filt_frame->height; y++) {
     y2 = y/2;
     for (x = 0; x < filt_frame->width; x++) {
@@ -736,8 +741,23 @@ void copyFramebefore() {
       Ybeforediff[y  * Ylinesize + x] =  Ydiffnow[y * Ylinesize + x];
       Ubeforediff[y2 * Ulinesize + x2] = Udiffnow[y2* Ulinesize + x2];
       Vbeforediff[y2 * Vlinesize + x2] = Vdiffnow[y2* Vlinesize + x2];
+      Rbefore[y  * Ylinesize + x] =  Rnow[y * Ylinesize + x];
+      Gbefore[y  * Ylinesize + x] =  Gnow[y * Ylinesize + x];
+      Bbefore[y  * Ylinesize + x] =  Bnow[y * Ylinesize + x];
     }  
-  }    
+  }  
+#else
+//printf("%s(%d) %4d\n",__FILE__,__LINE__,sizeof(Ybefore));exit(0);
+  memcpy(Ybefore,Ynow,Ylinesize*frameHeight);
+  memcpy(Ubefore,Unow,Ulinesize*frameHeight);
+  memcpy(Vbefore,Vnow,Vlinesize*frameHeight);
+  memcpy(Ybeforediff,Ydiffnow,Ylinesize*frameHeight);
+  memcpy(Ubeforediff,Udiffnow,Ulinesize*frameHeight);
+  memcpy(Vbeforediff,Vdiffnow,Vlinesize*frameHeight);
+  memcpy(Rbefore,Rnow,Ylinesize*frameHeight);
+  memcpy(Gbefore,Gnow,Ylinesize*frameHeight);
+  memcpy(Bbefore,Bnow,Ylinesize*frameHeight);
+#endif  
 }
 
 /*

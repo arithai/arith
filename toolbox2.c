@@ -52,7 +52,17 @@
 #define BLUEY 29
 #define BLUEU 255
 #define BLUEV 107
-
+#define YELLOWY 255
+#define YELLOWU 0
+#define YELLOWV 148
+//淡粉紅
+#define PURPLEY 180
+#define PURPLEU 170
+#define PURPLEV 181
+//青色
+#define CYANY 178
+#define CYANU 171 
+#define CYANV 0
     
 #define GLOBAL_WIDTH  640*6
 #define GLOBAL_HEIGHT 360*6
@@ -194,13 +204,11 @@ void calc_histogram(AVFrame *pict, int frame_index,
 
 extern void calc_nb(int x,int y);
 extern void calc_ref(int frame_index,int x,int y);
-extern int rn[2][2],gn[2][2],bn[2][2];
-extern int rb[2][2],gb[2][2],bb[2][2];
+extern int rn[3][3],gn[3][3],bn[3][3];
+extern int rb[3][3],gb[3][3],bb[3][3];
 extern int re,ge,be,ra,ga,ba;
+extern int imaxG,imaxB,imaxR;
 #define a(v) (v<128? 0:255)  
-#define BLUEY 29
-#define BLUEU 255
-#define BLUEV 107
 void fill_yuv_image(AVFrame *pict, int frame_index,
                     int width, int height)
 {
@@ -209,6 +217,7 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
     int x30,y30,xs60,ys60;           
     int Y0,U0,V0,Y1,U1,V1,R0,G0,B0,G1,R1,B1;
     int pos,posU,posV;
+    int pos2,pos2U,pos2V;
 #if 1
     int Xmid=(Xleft+Xright)/2;
     int Ymid=(Yup+Ydown)/2;
@@ -217,15 +226,13 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
     ys60=height/60;
     i = frame_index; i = i;
 #if 1
-    printf("%s(%d) )h,w=(%d,%d),(%d,%d,%d),(%d,%d,%d)\n",
+    printf("%s(%d),h,w=(%d,%d),(%d,%d,%d),(%d,%d,%d)\n",
            __FILE__,__LINE__,height,width, 
            pict->linesize[0],pict->linesize[1],pict->linesize[2],
            filt_frame->linesize[0],filt_frame->linesize[1],filt_frame->linesize[2]
         );  
 #endif     
-    ptGetFirst();       
-    ptGetFirstG();       
-    printf("%s(%d) (%d,%d)\n",__FILE__,__LINE__,xs60,ys60);
+  //printf("%s(%d) (%d,%d) (%X,%X))\n",__FILE__,__LINE__,xs60,ys60,ptFirst,ptFirstG);
 #if 0
     /* Y */
     for (y = 0; y < height; y++)
@@ -240,6 +247,8 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
     }
 #endif
 #if 1
+    calc_ref(frame_index,width,height);
+    printf("%s(%d) (%d,%d) (%X,%X))\n",__FILE__,__LINE__,xs60,ys60,ptFirst,ptFirstG);
     for (y = 0; y < height; y++) {
       y30=y/ys60;
       y30=y30;
@@ -254,21 +263,44 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
         pos = y * Ylinesize+ x; 
         posU=y2 * Ulinesize + x2; 
         posV=y2 * Vlinesize + x2; 
+      //if(frame_index) 
+      //  printf("%s(%d)(%4d,%4d) (%6d),%X\n",__FILE__,__LINE__,y,x,HXYG[x30][y30],ptFirstG);
         R1=Rnow[pos];G1=Gnow[pos];B1=Bnow[pos];
+        #if 0
         Y1=Ynow[pos];
         U1=Unow[posU];
         V1=Vnow[posV];
-        pos = y * pict->linesize[0]+ x; 
-        posU=y2 * pict->linesize[1] + x2; 
-        posV=y2 * pict->linesize[2] + x2; 
-//      printf("%s(%d)(%4d,%4d) (%6d,%6d))\n",__FILE__,__LINE__,y,x,HXYG[x30][y30],ptFirstG->pt.w);
-        if(false) {
-        }
+        #endif
         #if 1
+        Y1=Ydiffnow[pos];
+        U1=Udiffnow[posU];
+        V1=Vdiffnow[posV];
+        #endif
+        pos2 = y * pict->linesize[0]+ x; 
+        pos2U=y2 * pict->linesize[1] + x2; 
+        pos2V=y2 * pict->linesize[2] + x2; 
+        if(Yref[pos]==GREENY && Uref[posU]==GREENU && Vref[posV]==GREENV) {
+          pict->data[0][pos2]  = GREENY;  //BLUE
+          pict->data[1][pos2U] = GREENU; 
+          pict->data[2][pos2V] = GREENV;
+        }
+        else if(Yref[pos]==BLACKY && Uref[posU]==BLACKU && Vref[posV]==BLACKV) {
+          pict->data[0][pos2]  = WHITEY;  //BLUE
+          pict->data[1][pos2U] = WHITEU; 
+          pict->data[2][pos2V] = WHITEV;
+        }
+        #if 0
         else if(x>Xmid-10&&x<Xmid+10&&y>Ymid-10&&y<Ymid+10) {
-          pict->data[0][pos]  = BLACKY; //0x0;  //BLUE
-          pict->data[1][posU] = BLACKU; //0xFF;
-          pict->data[2][posV] = BLACKV; //0x0;
+          pict->data[0][pos2]  = BLUEY;  //BLUE
+          pict->data[1][pos2U] = BLUEU; 
+          pict->data[2][pos2V] = BLUEV; 
+        }
+        #endif
+        #if 0
+        else if(x>Xmid-10&&x<Xmid+10&&y>Ymid-10&&y<Ymid+10) {
+          pict->data[0][pos2]  = BLACKY; //0x0;  
+          pict->data[1][pos2U] = BLACKU; //0xFF;
+          pict->data[2][pos2V] = BLACKV; //0x0;
         }
         #endif
         #if 0
@@ -282,43 +314,130 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
           pict->data[2][posV] = 0xFF;
         }
         #endif
-        #if 1
+        #if 0
         else if(marginalV(x2,y2)) {
-          pict->data[0][pos]  = 0x0;  //BLACK
+          pict->data[0][pos]  = PURPLEY; //0x0;  //BLACK
+          pict->data[1][posU] = PURPLEU; //0x33;
+          pict->data[2][posV] = PURPLEV; //0x88;
+        }
+        #endif 
+        #if 0
+        else if(marginalV(x2,y2)) { //為何邊黃
+          pict->data[0][pos]  = 0x0;  
           pict->data[1][posU] = 0x33;
           pict->data[2][posV] = 0x88;
         }
         #endif
-        #if 0  
+        #if 0
         else if(HXYV[x30/2][y30/2] >= ptFirst->pt.w) {
           pict->data[0][pos]  = 0x0;   //GREEN
           pict->data[1][posU] = 0x22;  //correlated line 
           pict->data[2][posV] = 0x66;
         }
         #endif
-        #if 1
+        #if 0
+        else if(HXYV[x30/2][y30/2] >= ptFirst->pt.w) {
+          pict->data[0][pos]  = GREENY;   //GREEN
+          pict->data[1][posU] = GREENU;  //correlated line 
+          pict->data[2][posV] = GREENV;
+        }
+        #endif
+        #if 0
         else if(HXYV[x30/2][y30/2] >= ptFirst->pt.w ) {
           pict->data[0][pos]  = BLUEY;   //BLUE
           pict->data[1][posU] = BLUEU;
           pict->data[2][posV] = BLUEV;
         }
-        #endif  
-        #if 1
+        #endif
+        #if 0
         else if(HXYG[x30][y30] >= ptFirstG->pt.w ) {
 //        printf("%s(%d)(%4d,%4d) (%6d,%6d) <======\n",__FILE__,__LINE__,y,x,HXYG[x30][y30],ptFirstG->pt.w);
           pict->data[0][pos]  = REDY;   
           pict->data[1][posU] = REDU;
           pict->data[2][posV] = REDV;
+          //128,148 WHITEY also YELLOWY 255
+          #define z(s,t) ((Yref[(t) * Ylinesize+ (s)]==WHITEY)?0:1) 
+          if(y30>5 && y30<55 && x30>5 && x30 <55) {
+          
+            if((y-y30*ys60)==ys60/2) { //only for corner
+              for (x0=x+xs60;x0<width-xs60;x0++) {
+                if( ( z(x0-1,y-1)+z(x0,y-1)+z(x0+1,y-1)
+                     +z(x0-1,y)  +z(x0,y  )+z(x0+1,y  )
+                     +z(x0-1,y+1)+z(x0,y+1)+z(x0+1,y+1))
+                   >=4) {
+                  Yref[y * Ylinesize+ x0]  =YELLOWY;
+                  Uref[y2* Ulinesize+ x0/2]=YELLOWU;
+                  Vref[y2* Vlinesize+ x0/2]=YELLOWV;
+//                printf("%s(%d)(%4d,%4d)-%4d,(%4d,%4d))\n",__FILE__,__LINE__,y,x,x0,xs60,ys60);
+                  break;
+                }
+              }  
+              for (x0=x-xs60;x0>=xs60;x0--) {
+                if( ( z(x0-1,y-1)+z(x0,y-1)+z(x0+1,y-1)
+                     +z(x0-1,y)  +z(x0,y  )+z(x0+1,y  )
+                     +z(x0-1,y+1)+z(x0,y+1)+z(x0+1,y+1))
+                   >=4) {
+                  Yref[y * Ylinesize+ x0]  =YELLOWY;
+                  Uref[y2* Ulinesize+ x0/2]=YELLOWU;
+                  Vref[y2* Vlinesize+ x0/2]=YELLOWV;
+                  break;
+                }
+              }
+            }
+
+            if((x-x30*xs60)==xs60/2) {
+              for (y0=y+ys60;y0<height-ys60;y0++) {
+                if( ( z(x-1,y0-1)+z(x,y0-1)+z(x+1,y0-1)
+                     +z(x-1,y0)  +z(x,y0  )+z(x+1,y0  )
+                     +z(x-1,y0+1)+z(x,y0+1)+z(x+1,y0+1))
+                   >=4) {
+                  Yref[y0 * Ylinesize+  x] =YELLOWY;
+                  Uref[y0/2* Ulinesize+ x2]=YELLOWU;
+                  Vref[y0/2* Vlinesize+ x2]=YELLOWV;
+//                printf("%s(%d)(%4d,%4d)-%4d,(%4d,%4d))\n",__FILE__,__LINE__,y,x,x0,xs60,ys60);
+                  break;
+                }
+              }  
+           
+              for (y0=y-ys60;y0>=ys60;y0--) {
+                if( ( z(x-1,y0-1)+z(x,y0-1)+z(x+1,y0-1)
+                     +z(x-1,y0)  +z(x,y0  )+z(x+1,y0  )
+                     +z(x-1,y0+1)+z(x,y0+1)+z(x+1,y0+1))
+                   >=4) {
+                  Yref[y0 * Ylinesize+  x] =YELLOWY;
+                  Uref[y0/2* Ulinesize+ x2]=YELLOWU;
+                  Vref[y0/2* Vlinesize+ x2]=YELLOWV;
+                  break;
+                }
+              } 
+            }
+ 
+          }  
         }
         #endif  
         else {
- //       printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
-          pict->data[0][pos]  = Y1;
-          pict->data[1][posU] = U1;
-          pict->data[2][posV] = V1;
+          #if 0
+     //   printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,y,x);
+          if(Rnow[pos]==imaxR && Gnow[pos]==imaxG && Bnow[pos]==imaxB) {
+            pict->data[0][pos2]  = CYANY;
+            pict->data[1][pos2U] = CYANU;
+            pict->data[2][pos2V] = CYANV;          
+          }
+          else 
+          #endif     
+          {
+            pict->data[0][pos2]  = Yref[pos ];
+            pict->data[1][pos2U] = Uref[posU];
+            pict->data[2][pos2V] = Vref[posV];
+          }
+          #if 0
+          pict->data[0][pos2]  = Y1;
+          pict->data[1][pos2U] = U1;
+          pict->data[2][pos2V] = V1;
+          #endif
         }
       }    
-//    printf("%s(%d)(%4d,%4d)(%5d,%5d,%5d)\n",__FILE__,__LINE__,y,x,pos,posU,posV);
+   // printf("%s(%d)(%4d,%4d)(%5d,%5d,%5d)\n",__FILE__,__LINE__,y,x,pos,posU,posV);
     }
     #if 1 
     printf("%s(%d)[%4d],(%d,%d,%d)(%d,%d,%d)(%d,%d,%d)(%d,%d,%d,%d)(%d,%d,%d,%d)\n",
@@ -327,7 +446,7 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
     SposSlope,Sc0,Sc1,Sy0,TposSlope,Tc0,Tc1,Ty0);
     #endif
     printf("%s(%d)\n",__FILE__,__LINE__);
-    #if 1
+    #if 0
     for (x0 = Sc0; x0 < Sc1; x0++) {
 //      printf("%s(%d)\n",__FILE__,__LINE__);
       y0=(int)(Sy0+x0*ratioS);
@@ -345,7 +464,7 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
       }          
     }
     #endif
-    #if 1
+    #if 0
     for (x0 = Tc0; x0 < Tc1; x0++) {
 //    printf("%s(%d)\n",__FILE__,__LINE__);
       y0=(int)(Ty0+x0*ratioT);
@@ -390,7 +509,7 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
           }    
        }
     }
-#endif    
+#endif     
 #if 0
     if (frame_index > 0) {
       printf("fill_yuv_image %s(%d)\n",__FILE__,__LINE__);
