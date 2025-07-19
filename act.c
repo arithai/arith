@@ -237,7 +237,7 @@ void ptGetFirst() {
 //printf("%s(%d) %lX\n",__FILE__,__LINE__,(long)ptFirst);
 }
 
-#define maxFirstG 256
+#define maxFirstG 2048
 ST_POINT_LIST *ptFirstG;
 void ptGetFirstG() {
   ST_POINT_LIST *ptListG,*ptListGTemp;
@@ -331,6 +331,17 @@ int EX[3840];
 int EY[3840];
 int HGBR[256*256*256];
 int imaxG,imaxB,imaxR; //suppose they are leaves
+#define GGBA 30
+#define GGRA 20
+#define GRA  30
+int GreenType(pos) {
+  if ( ( (Gnow[pos]-Bnow[pos])>GGBA && (Gnow[pos]-Rnow[pos])>GGRA && Rnow[pos]>GRA ) 
+  ) { //type green
+    return 1; //type 2 green
+  }
+  return -1;
+}
+
 void calc_64x36(AVFrame *pict, int frame_index,
                 int width, int height) { //60x60
   int i,x,y,x2,y2,x30,y30,x60,y60;
@@ -368,12 +379,9 @@ void calc_64x36(AVFrame *pict, int frame_index,
       pos=y * Ylinesize + x;
       HXYY[x60][y60]+=Ynow[pos];
       HXYR[x60][y60]+=Rnow[pos];
-      if( Bnow[pos] < Gnow[pos] && (  //leaves only
-          Rnow[pos] < Gnow[pos] &&
-          Gnow[pos] > 96
-//        ( (Rnow[pos] < Bnow[pos]) || (2*Rnow[pos] < (Bnow[pos]+Gnow[pos]) ) )
-      ) ) { //maybe leaves not  Green tree trunk 
-        HXYG[x60][y60]+=Gnow[pos];
+      if( GreenType(pos) > 0 ) { //maybe leaves not  Green tree trunk
+        HXYG[x60][y60]++; 
+      //HXYG[x60][y60]+=Gnow[pos];
         i=Gnow[pos]*65536+Bnow[pos]*256+Rnow[pos];
         HGBR[i]=HGBR[i]+1;
       }
@@ -1078,7 +1086,8 @@ extern int re,ge,be,ra,ga,ba;
 #undef a(v)
 #define a(v) (v>128? 255:0)   
 void calc_matrix(int x,int y) {
-  int x2,y2,x0,y0,Y,U,V,r11,g11,b11,r11a,g11a,b11a;
+  int x2,y2,x0,y0,r11,g11,b11,r11a,g11a,b11a;
+  int Y,U,V;
   x0 = x-1;if(x0<0) x0=0;
     
   y0 = y-1;if(y0<0) y0=0;      
@@ -1202,7 +1211,7 @@ void calc_matrix(int x,int y) {
 
 extern int frameWidth,frameHeight;
 void calc_nb(int x,int y) {
-  int x2,y2,x0,y0,Y,U,V,r11,g11,b11,r11a,g11a,b11a;
+  int x2,y2,x0,y0,Y,U,V,r11a,g11a,b11a;
   int pos;
   int w,h;
 
@@ -1258,28 +1267,25 @@ void calc_nb(int x,int y) {
   rn[2][2]=Rnow[pos];   gn[2][2]=Gnow[pos];   bn[2][2]=Bnow[pos];  
   rb[2][2]=Rbefore[pos];gb[2][2]=Gbefore[pos];bb[2][2]=Bbefore[pos];  
   
-  r11=rn[1][1];
-  re=abs(r11-rn[0][0])+abs(r11-rn[0][1])+abs(r11-rn[0][2])+
-     abs(r11-rn[1][0])                  +abs(r11-rn[1][2])+
-     abs(r11-rn[2][0])+abs(r11-rn[2][1])+abs(r11-rn[2][2]);
-  g11=gn[1][1];
-  ge=abs(g11-gn[0][0])+abs(g11-gn[0][1])+abs(g11-gn[0][2])+
-     abs(g11-gn[1][0])                  +abs(g11-gn[1][2])+
-     abs(g11-gn[2][0])+abs(g11-gn[2][1])+abs(g11-gn[2][2]);
-  b11=bn[1][1];
-  be=abs(b11-bn[0][0])+abs(b11-bn[0][1])+abs(b11-bn[0][2])+
-     abs(b11-bn[1][0])                  +abs(b11-bn[1][2])+
-     abs(b11-bn[2][0])+abs(b11-bn[2][1])+abs(b11-bn[2][2]);  
+  re=abs(rn[0][0]-rn[1][1])+abs(rn[0][1]-rn[1][1])+abs(rn[0][2]-rn[1][1])+
+     abs(rn[1][0]-rn[1][1])                       +abs(rn[1][2]-rn[1][1])+
+     abs(rn[2][0]-rn[1][1])+abs(rn[2][1]-rn[1][1])+abs(rn[2][2]-rn[1][1]);  
+  ge=abs(gn[0][0]-gn[1][1])+abs(gn[0][1]-gn[1][1])+abs(gn[0][2]-gn[1][1])+
+     abs(gn[1][0]-gn[1][1])                       +abs(gn[1][2]-gn[1][1])+
+     abs(gn[2][0]-gn[1][1])+abs(gn[2][1]-gn[1][1])+abs(gn[2][2]-gn[1][1]);  
+  be=abs(bn[0][0]-bn[1][1])+abs(bn[0][1]-bn[1][1])+abs(bn[0][2]-bn[1][1])+
+     abs(bn[1][0]-bn[1][1])                       +abs(bn[1][2]-bn[1][1])+
+     abs(bn[2][0]-bn[1][1])+abs(bn[2][1]-bn[1][1])+abs(bn[2][2]-bn[1][1]);  
 
-  r11a=a(r11); 
+  r11a=a(rn[1][1]); 
   ra=abs(r11a-a(rn[0][0]))+abs(r11a-a(rn[0][1]))+abs(r11a-a(rn[0][2]))+
      abs(r11a-a(rn[1][0]))                      +abs(r11a-a(rn[1][2]))+
      abs(r11a-a(rn[2][0]))+abs(r11a-a(rn[2][1]))+abs(r11a-a(rn[2][2]));
-  g11a=a(g11); 
+  g11a=a(gn[1][1]); 
   ga=abs(g11a-a(gn[0][0]))+abs(g11a-a(gn[0][1]))+abs(g11a-a(gn[0][2]))+
      abs(g11a-a(gn[1][0]))                      +abs(g11a-a(gn[1][2]))+
      abs(g11a-a(gn[2][0]))+abs(g11a-a(gn[2][1]))+abs(g11a-a(gn[2][2]));
-  b11a=a(b11); 
+  b11a=a(bn[1][1]); 
   ba=abs(b11a-a(bn[0][0]))+abs(b11a-a(bn[0][1]))+abs(b11a-a(bn[0][2]))+
      abs(b11a-a(bn[1][0]))                      +abs(b11a-a(bn[1][2]))+
      abs(b11a-a(bn[2][0]))+abs(b11a-a(bn[2][1]))+abs(b11a-a(bn[2][2]));
@@ -1291,7 +1297,8 @@ extern unsigned char *Vref;
 //called x edge  ------
 typedef struct ST_EDGE {
   int x;
-  int y[5]; //y[3]<y[4] up/down 1,2 is left right
+  int uy[5]; //1
+  int dy[5]; //2
   struct ST_EDGE *next; //x0<x1<...
 } ST_EDGE;
 ST_EDGE *edgeHead=NULL,*edgeTail;
@@ -1313,14 +1320,31 @@ void insertEdgeToTail(ST_EDGE *edgeList) {
   edgeTail->next=edgeList;
   edgeTail=edgeList; //edgeList->next must be NULL
 }
+void sort(int *ilist,int n) {
+  int i,j,temp;
+  for(i=0;i<=n;i++) {
+    temp=ilist[i];
+    for(j=i+1;j<=n;j++) {
+      if(temp>ilist[j]) { //switch i,j
+         ilist[i]=ilist[j];
+         ilist[j]=temp;
+      }
+    }
+  }
+}
 void setEdge(int x,int y,int index) { //index 0:LR edge //1:upper //2:down
   ST_EDGE *edgeNext,*edgeList,*edgeTemp;
-
-//printf("%s(%d) (%4d,%4d,%2d)\n",__FILE__,__LINE__,x,y,index);
+  int i;
   edgeNext=(ST_EDGE *)malloc(sizeof(ST_EDGE));
   edgeNext->x=x;
-  memset(edgeNext->y,0,5);
-  edgeNext->y[index]=y;
+  edgeNext->uy[0]=0;edgeNext->uy[1]=0;edgeNext->uy[2]=0;edgeNext->uy[3]=0;edgeNext->uy[4]=0;
+  edgeNext->dy[0]=0;edgeNext->dy[1]=0;edgeNext->dy[2]=0;edgeNext->dy[3]=0;edgeNext->dy[4]=0;
+  if(index==1) edgeNext->uy[0]=y;
+  if(index==2) edgeNext->dy[0]=y;
+//  if(x==2) {
+//    printf("%s(%d) (%4d,%4d,%2d),%4d\n",__FILE__,__LINE__,x,y,index,edgeNext->y[2]);
+//    exit(0);
+//  }
   if(edgeHead==NULL) {
      edgeHead=edgeNext;
      edgeTail=edgeNext;
@@ -1345,13 +1369,21 @@ void setEdge(int x,int y,int index) { //index 0:LR edge //1:upper //2:down
     edgeTail=edgeNext;
   }
   else if(edgeList->x==x) { //replace or average or upper
-//    if(x==321) {
-//      printf("%s(%d) replace or average or upper\n",__FILE__,__LINE__);
-//    }
-//  if(edgeList->y[index]==0) 
-     edgeList->y[index]=y;
-//  else 
-      edgeList->y[index]=(edgeList->y[index]+3*y)/4;
+//  if(x==321) {
+//    printf("%s(%d) replace or average or upper\n",__FILE__,__LINE__);
+//  }
+    if(index==1) { 
+      for (i=0;i<5;i++) 
+        if(edgeList->uy[i]==0) break;
+      if(i<=4) edgeList->uy[i]=y;
+      sort(edgeList->uy,i);
+    }
+    if(index==2) {
+      for (i=0;i<5;i++) 
+        if(edgeList->dy[i]==0) break;
+      if(i<=4) edgeList->dy[i]=y;
+      sort(edgeList->dy,i);
+    }
     free(edgeNext); //no use
     edgeNext=NULL;
   }
@@ -1389,174 +1421,191 @@ void setref(int x,int y,unsigned char Y1,unsigned char U1,unsigned char V1) {
 void DrawEdge(int width,int height,int index) {
   ST_EDGE *edgeList=edgeHead;
   int x0,y0,x1,y1,x2,y2,x3,y3;
-  int pos,posU,posV;
+  int pos,posU,posV,pos1,pos2;
+  int i,sum,avg;
+  int *ylist;
   x0=0;x1=0;
   while(edgeList!=NULL) {
-    if (edgeList->y[index]>0) {
+    if(index==1) ylist=edgeList->uy; else ylist=edgeList->dy;
+//  printf("%s(%d),%d,%X\n",__FILE__,__LINE__,index,ylist);
+    sum=0;
+    for(i=0;i<5;i++) {
+      sum+=ylist[i];
+      if(ylist[i]==0) break;
+    }
+    if(i==0) i=1; 
+    avg=sum/i;
+//  printf("%s(%d),%d,%d,%d,%X<======\n",__FILE__,__LINE__,index,i,avg,ylist);
+    if (avg>0) {
+      if(index==1) {
+        for(i=0;i<5;i++) {
+          if(ylist[i]>(avg/2)) break;
+        }
+      }
+      if(index==2) {
+        for(i=4;i>=0;i--) {
+          if(ylist[i]>=avg) break;
+        }
+      }
+      if(i==5) i=4;
+      if(i<0)  i=0;
+      avg=ylist[i];
       if(x1==0) { //first
         x1=edgeList->x;
-        y1=edgeList->y[index];
+        y1=avg;
       }
-      else {
-        x0=x1;
-        y0=y1;
-        x1=edgeList->x;
-        y1=edgeList->y[index];
-//      printf("%s(%d)(%4d,%4d)-(%4d,%4d)\n",__FILE__,__LINE__,x0,y0,x1,y1);
+      else {  
+      //if( x0==0 || abs((y1-avg)/(1+edgeList->x-x1)) <= 60 ) 
+        {
+          x0=x1;
+          y0=y1;        
+          x1=edgeList->x;
+          y1=avg;
+          pos =y0*Ylinesize+x0;
+          pos1=(y0-2)*Ylinesize+x0;
+          pos2=(y0-2)*Ylinesize+x0-2;
+          printf("%s(%d),%d,%d,%4d,%4d,%4d,%4d,%4d,%4d,%4d)\n",
+                 __FILE__,__LINE__,index,i,avg,edgeList->x,ylist[0],ylist[1],ylist[2],ylist[3],ylist[4]);
+          printf("%s(%d),(%3d,%3d,%3d),(%3d,%3d,%3d),(%3d,%3d,%3d),(%4d,%4d)-(%4d,%4d))\n",
+                 __FILE__,__LINE__,
+                 Rnow[pos],Gnow[pos],Bnow[pos],Rnow[pos1],Gnow[pos1],Bnow[pos1],Rnow[pos2],Gnow[pos2],Bnow[pos2],x0,y0,x1,y1);
+          if(x0>0 && y0>0 && x1>0 && y1>0) {
+//          if(x0==1 || x1==1)
+//            printf("%s(%d),%d,(%4d,%4d)-(%4d,%4d)\n",__FILE__,__LINE__,index,x0,y0,x1,y1);
 //DrawLine
-        if(x0>=x1) {
-          printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,x0,x1);
-          edgeList=edgeList->next; exit(0);
-          continue;
+            if(x0>=x1) {
+              printf("%s(%d)(%4d,%4d)\n",__FILE__,__LINE__,x0,x1);
+              edgeList=edgeList->next; exit(0);
+              continue;
+            }
+            if(abs(y1-y0)>x1-x0) {
+              pos=y0 * Ylinesize + x0;
+            //if(x0>500) return;
+              if(y0<y1) {
+                for(y3=y0;y3<=y1;y3++) {
+                  x3=y0+(x1-x0)*(y3-y0)/(y1-y0);      
+                  if(x3>0 && x3<width) {
+                    setref(x3,y3,GREENY,GREENU,GREENV);
+                  }
+                }
+              }
+              else {
+                for(y3=y1;y3<=y0;y3++) {
+                  x3=x1+(x0-x1)*(y3-y1)/(y0-y1);      
+                  if(x3>0 && x3<width) {
+                    setref(x3,y3,GREENY,GREENU,GREENV);
+                  }
+                }
+              }
+            }
+            else {
+              for(x3=x0;x3<=x1;x3++) {
+                y3=y0+(y1-y0)*(x3-x0)/(x1-x0);      
+                if(y3>0 && y3<height) {
+                  setref(x3,y3,GREENY,GREENU,GREENV);
+                }
+              }
+            }
+          } 
         }
-        for(x3=x0;x3<=x1;x3++) {
-          y3=y0+(y1-y0)*(x3-x0)/(x1-x0);      
-          if(y3>0 && y3<height) {
-            setref(x3,y3,GREENY,GREENU,GREENV);
-          }
-        } 
-      }
+      } 
     } 
     edgeList=edgeList->next;
   }
 }
-#define ax(v) (v>72? 255:0)  
-void calc_ref(int frame_index,int width,int height) {
-  int g,R1,G1,B1,R0,G0,B0;
-  int x, y, x0, y0, x2, y2, x4, y4;
-  int x30,y30,xs60,ys60;
-  ST_EDGE *edgeList;
-  for (y = 0; y < height; y++)  {
-    y2 = y/2;
-    for (x = 0; x < width; x++) {
-      x2 = x/2;
-      if(frame_index>0) {
-        calc_nb(x,y);
-  //frame_index > 0 LBM Lattice Boltzmann method
-        R1 = rn[1][1]; G1 = gn[1][1]; B1 = bn[1][1];
-        R0 = rb[1][1]; G0 = gb[1][1]; B0 = bb[1][1];
-        g=abs(a(G0)-a(G1));
-        #if 0
-        if(ge> 8 && abs(ax(G1)-ax(G0)) > 8 ) { //變動且是邊界
-        #else
-        if(marginalV(x2,y2)) {
-        #endif
-          setref(x,y,BLACKY,BLACKU,BLACKV);
-        }  
-        else { 
-          setref(x,y,WHITEY,WHITEU,WHITEV);
-        //setref(x,y,Ynow[y*Ylinesize+x],Unow[y2*Ulinesize + x2],Vnow[y2*Vlinesize + x2]);
-        }
-      }
-      else {
-      #if 1
-        setref(x,y,Ydiffnow[y*Ylinesize+x],Udiffnow[y2*Ulinesize + x2],Vdiffnow[y2*Vlinesize + x2]);
-      #endif
-      }
-    }
+#define ax(v) (v>72? 255:0) 
+#define ARA 120
+#define GBA 10
+#define GRA 10
+#define BRA 10
+#define YDA 8
+//要取邊界
+int LBM(int x,int y) {
+  int pos,pos1,pos2;
+  if (y<20 || y>frameHeight-20) return -1;
+  pos =y*Ylinesize+x;
+  pos1=(y-YDA)*Ylinesize+x;
+  pos2=(y+YDA)*Ylinesize+x;
+  if ( ( (Gnow[pos]-Bnow[pos])>GBA && (Gnow[pos]-Rnow[pos])>GRA && Rnow[pos]>16 ) 
+    && ( (Rnow[pos1]>ARA && Gnow[pos1]>ARA && Bnow[pos1]>ARA) 
+       &&  !( (Gnow[pos1]-Bnow[pos1])>GBA && (Gnow[pos1]-Rnow[pos1])>GRA && Rnow[pos1]>16)
+    && (Vnow[pos]<Vnow[pos1]) //綠小
+       )
+  ) { //綠下up
+    return 1; //up
   }
-//printf("%s(%d) (%d,%d) (%X,%X)\n",__FILE__,__LINE__,y,x,ptFirst,ptFirstG);
-
-  #if 1
+  if ( ( (Gnow[pos]-Bnow[pos])>GBA && (Gnow[pos]-Rnow[pos])>GRA && Rnow[pos]>16 ) 
+    && ( (Rnow[pos2]>ARA && Gnow[pos2]>ARA && Bnow[pos2]>ARA) 
+        && !((Gnow[pos2]-Bnow[pos2])>GBA && (Gnow[pos2]-Rnow[pos2])>GRA && Rnow[pos2]>16)
+    && (Vnow[pos]<Vnow[pos2]) //綠小         
+       )       
+  ) { //綠上up
+    return 2; //down
+  }
+  return -1;
+}
+void calc_ref(int frame_index,int width,int height) {
+//int g,R1,G1,B1,R0,G0,B0;
+  int x, y, x0, y0, x2, y2;
+  int x60,y60,xs60,ys60;
+  int index;
   freeEdge();
-  ptGetFirst();       
   ptGetFirstG();       
   xs60=width/60;
   ys60=height/60;
-  for (y = 0; y < height; y++)  {
-    y2 = y/2;
-    y30=y/ys60;
-    y30=y30;
-    y2=y/2;
-    for (x = 0; x < width; x++) {
-      x2 = x/2;
-      x30=x/xs60;
-      x30=x30;
-      x2=x/2;
-      if(HXYG[x30][y30] >= ptFirstG->pt.w ) {
-//      printf("%s(%d)(%4d,%4d) (%6d,%6d) <======\n",__FILE__,__LINE__,y,x,HXYG[x30][y30],ptFirstG->pt.w);
-        //128,148 WHITEY also YELLOWY 255
-        setref(x,y,REDY,REDU,REDV);
-        #define z(s,t) (( Yref[(t) * Ylinesize+ (s)]==BLACKY )?1:0) 
-        if(y30>5 && y30<55 && x30>5 && x30 <55 &&
-           ((y-y30*ys60)==ys60/2 || (x-x30*xs60)==xs60/2) ) {
-          //left
-          for (x0=x-xs60;x0>=xs60;x0--) {
-            #if 0
-            if ( marginalVref(x,y0) ) {
-            #endif
-            #if 1   
-            if( ( z(x0-1,y-1)+z(x0,y-1)+z(x0+1,y-1)
-                 +z(x0-1,y)  +z(x0,y  )+z(x0+1,y  )
-                 +z(x0-1,y+1)+z(x0,y+1)+z(x0+1,y+1))
-               >=4) {
-            #endif
-              setref(x0,y,PURPLEY,PURPLEU,PURPLEV);
-            //printf("%s(%d) (%4d,%4d,%4d)\n",__FILE__,__LINE__,x0,y30*ys60+ys60/2,0);
-              setEdge(x0,y,1);
-              break;
-            }
+  if(frame_index>0) {
+    for (y = 0; y < height; y++)  {
+      y2 = y/2;
+      y60=y/ys60;
+      for (x = 0; x < width; x++) {
+        x2 = x/2;
+        x60=x/xs60;
+  //    calc_nb(x,y);
+  //frame_index > 0 LBM Lattice Boltzmann method
+  //    R1 = rn[1][1]; G1 = gn[1][1]; B1 = bn[1][1];
+  //    R0 = rb[1][1]; G0 = gb[1][1]; B0 = bb[1][1];
+  //    g=abs(a(G0)-a(G1));
+  //    #if 1
+  //    if(ge> 8 && abs(ax(G1)-ax(G0)) > 8 ) { //變動且是邊界
+  //    #else
+  //    if(marginalV(x2,y2)) {
+  //    #endif
+
+        if(HXYG[x60][y60] >= ptFirstG->pt.w ) {
+          index=LBM(x,y);
+      //  if(index>0 && y>950 && y<1250) {
+      //    printf("%s(%d)(%4d,%4d),%d\n",__FILE__,__LINE__,x,y,index);
+      //    index=-1;
+      //  }
+          if(index>0 && y>ys60/2) {
+            setref(x,y,PURPLEY,PURPLEU,PURPLEV);
+            setEdge(x,y,index);
           }
-          //right
-          for (x0=x+xs60;x0<width-xs60;x0++) {
-            #if 0
-            if ( marginalVref(x,y0) ) {
-            #endif
-            #if 1   
-            if( ( z(x0-1,y-1)+z(x0,y-1)+z(x0+1,y-1)
-                 +z(x0-1,y)  +z(x0,y  )+z(x0+1,y  )
-                 +z(x0-1,y+1)+z(x0,y+1)+z(x0+1,y+1))
-               >=4) {
-            #endif
-              setref(x0,y,PURPLEY,PURPLEU,PURPLEV);
-            //printf("%s(%d) (%4d,%4d,%4d)\n",__FILE__,__LINE__,x0,y30*ys60+ys60/2,0);
-              setEdge(x0,y,2);
-              break;
-            }
-          } 
-          //upper 
-          for (y0=y-ys60;y0>=ys60;y0--) {
-            #if 0
-            if ( marginalVref(x,y0) ) {
-            #endif
-            #if 1   
-            if (( z(x-1,y0-1)+z(x,y0-1)+z(x+1,y0-1)
-                 +z(x-1,y0)  +z(x,y0  )+z(x+1,y0  )
-                 +z(x-1,y0+1)+z(x,y0+1)+z(x+1,y0+1))
-               >=4) {
-            #endif
-              setref(x,y0,PURPLEY,PURPLEU,PURPLEV);
-              setEdge(x,y0,3);
-              break;
-            }
+          else {
+            setref(x,y,WHITEY,WHITEU,WHITEV);
           }
-          //down
-          for (y0=y+ys60;y0<height-ys60;y0++) {
-            #if 0
-            if ( marginalVref(x,y0) ) {
-            #endif
-            #if 1   
-            if((  z(x-1,y0-1)+z(x,y0-1)+z(x+1,y0-1)
-                 +z(x-1,y0)  +z(x,y0  )+z(x+1,y0  )
-                 +z(x-1,y0+1)+z(x,y0+1)+z(x+1,y0+1))
-               >=4) {
-            #endif 
-              setref(x,y0,BLUEY,BLUEU,BLUEV);
-              setEdge(x,y0,4); //down
-            //printf("%s(%d)(%4d,%4d)-%4d,(%4d,%4d))\n",__FILE__,__LINE__,y,x,x0,xs60,ys60);
-              break;
-            }
-          }         
-        }   
+        }  
+        else { 
+          setref(x,y,WHITEY,WHITEU,WHITEV);
+        //setref(x,y,Ydiffnow[y*Ylinesize+x],Udiffnow[y2*Ulinesize + x2],Vdiffnow[y2*Vlinesize + x2]);
+        }
+      }
+    }
+    DrawEdge(width,height,1); //Up
+  //DrawEdge(width,height,2); //Down
+  //printf("%s(%d) (%d,%d) (%X,%X)\n",__FILE__,__LINE__,y,x,ptFirst,ptFirstG);
+  } 
+  else {
+    for (y = 0; y < height; y++)  {
+      y2 = y/2;
+      for (x = 0; x < width; x++) {
+        x2 = x/2;
+        #if 1
+        setref(x,y,Ydiffnow[y*Ylinesize+x],Udiffnow[y2*Ulinesize + x2],Vdiffnow[y2*Vlinesize + x2]);
+      //setref(x,y,Ynow[y*Ylinesize+x],Unow[y2*Ulinesize + x2],Vnow[y2*Vlinesize + x2]);
+        #endif
       }
     }
   }
-
-  DrawEdge(width,height,1); //Up
-  DrawEdge(width,height,2); //Down
-  DrawEdge(width,height,3); //Left
-  DrawEdge(width,height,4); //Right
-  #endif  
 }
-
 

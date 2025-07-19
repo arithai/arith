@@ -285,9 +285,14 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
           pict->data[2][pos2V] = GREENV;
         }
         else if(Yref[pos]==BLACKY && Uref[posU]==BLACKU && Vref[posV]==BLACKV) {
-          pict->data[0][pos2]  = WHITEY;  //BLUE
-          pict->data[1][pos2U] = WHITEU; 
-          pict->data[2][pos2V] = WHITEV;
+          pict->data[0][pos2]  = BLACKY;  //BLUE
+          pict->data[1][pos2U] = BLACKU; 
+          pict->data[2][pos2V] = BLACKV;
+        }
+        else if(Yref[pos]==PURPLEY && Uref[posU]==PURPLEU && Vref[posV]==PURPLEV) {
+          pict->data[0][pos2]  = PURPLEY;  //BLUE
+          pict->data[1][pos2U] = PURPLEU; 
+          pict->data[2][pos2V] = PURPLEV;
         }
         #if 0
         else if(x>Xmid-10&&x<Xmid+10&&y>Ymid-10&&y<Ymid+10) {
