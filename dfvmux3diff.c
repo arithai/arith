@@ -944,6 +944,9 @@ static void display_frame(const AVFrame *frame, AVRational time_base)
 }
 #endif
 
+#define XLENGTH 3840
+int UEY[XLENGTH];
+int DEY[XLENGTH];
 int main(int argc, char **argv)
 {
     time_t now0,now1;
@@ -965,6 +968,8 @@ int main(int argc, char **argv)
     int i;    
 //mux end
     now0 = time(NULL);
+    memset(UEY,0,XLENGTH*4);
+    memset(DEY,0,XLENGTH*4);
     frame = av_frame_alloc();
     filt_frame   = av_frame_alloc();
 

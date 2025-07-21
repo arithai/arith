@@ -237,26 +237,23 @@ void ptGetFirst() {
 //printf("%s(%d) %lX\n",__FILE__,__LINE__,(long)ptFirst);
 }
 
-#define maxFirstG 2048
+#define maxFirstG 800
 ST_POINT_LIST *ptFirstG;
 void ptGetFirstG() {
   ST_POINT_LIST *ptListG,*ptListGTemp;
-  int x30,y30;
   int i=0;
   ptListG=ptHeadG;
   while(ptListG!=NULL && i<maxFirstG) { 
-//  printf("%s(%d) %lX,%d\n",__FILE__,__LINE__,(long)ptListG,i);
-    if(ptListG->pt.w>380000) {
-      x30=ptListG->pt.x;y30=ptListG->pt.y;
-      x30=x30;y30=y30;
-//    printf("(%4d,%4d,%7d)\n",x30,y30,ptListG->pt.w);
-    }    
+  //if(ptListG->pt.w>800) 
+  //{
+  //  printf("%s(%d),%4d,(%4d,%4d,%7d)\n",__FILE__,__LINE__,i,ptListG->pt.x,ptListG->pt.y,ptListG->pt.w);
+  //}    
     i++;    
     ptListGTemp=ptListG->next;
     ptListG=ptListGTemp;
   }
   ptFirstG=ptListG;
-//printf("%s(%d) %lX\n",__FILE__,__LINE__,(long)ptFirst);
+//exit(0);
 }
 #include <string.h>
 #include <math.h>
@@ -327,8 +324,9 @@ int HXYB[60][60];
 int HXYY[60][60];
 int HXYU[30][30];
 int HXYV[30][30];
-int EX[3840];
-int EY[3840];
+#define XLENGTH 3840
+extern int UEY[XLENGTH];
+extern int DEY[XLENGTH];
 int HGBR[256*256*256];
 int imaxG,imaxB,imaxR; //suppose they are leaves
 #define GGBA 30
@@ -350,17 +348,15 @@ void calc_64x36(AVFrame *pict, int frame_index,
   int maxGBR,iGBR;
   ptFree();    
   ptFreeG();    
-  memset(HXYR,0,60*60);
-  memset(HXYG,0,60*60);
-  memset(HXYB,0,60*60);
+  memset(HXYR,0,60*60*4);
+  memset(HXYG,0,60*60*4);
+  memset(HXYB,0,60*60*4);
 
-  memset(HXYY,0,60*60);
-  memset(HXYU,0,30*30);
-  memset(HXYV,0,30*30);
-  memset(EX,  0,3840);
-  memset(EY,  0,3840);
+  memset(HXYY,0,60*60*4);
+  memset(HXYU,0,30*30*4);
+  memset(HXYV,0,30*30*4);
 
-  memset(HGBR,0,256*256*256);
+  memset(HGBR,0,256*256*256*4);
   xs60=width/60;
   ys60=height/60;
 #if 0  
@@ -394,10 +390,6 @@ void calc_64x36(AVFrame *pict, int frame_index,
       x30=x2/xs60;  
       HXYU[x30][y30]+=Unow[y2 * Ulinesize + x2];  
       HXYV[x30][y30]+=Vnow[y2 * Vlinesize + x2];  
-      if(marginalV(x2,y2)) {
-        EX[x2]++;;
-        EY[y2]++;;
-      }
     }
   }  
   for(y30=0;y30<30;y30++) {
@@ -754,7 +746,7 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
         }
       }
     }
-//    printf("%s(%d)fi=%3d,x=(%4d,%4d),xpos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Xfi,x,y,XposLine,Xc0,Xc1,w,Xw);        
+//  printf("%s(%d)fi=%3d,x=(%4d,%4d),xpos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Xfi,x,y,XposLine,Xc0,Xc1,w,Xw);        
     if(w>(Xw+2)) {
       Xw=w;
       lnList->L.w=Xw;
@@ -1334,17 +1326,33 @@ void sort(int *ilist,int n) {
 }
 void setEdge(int x,int y,int index) { //index 0:LR edge //1:upper //2:down
   ST_EDGE *edgeNext,*edgeList,*edgeTemp;
+  int y0;
   int i;
+  if(index==1 && UEY[x]!=0 && (y-UEY[x])>400) return;
+  if(index==2 && DEY[x]!=0 && (DEY[x]-y)>400) return;
   edgeNext=(ST_EDGE *)malloc(sizeof(ST_EDGE));
   edgeNext->x=x;
-  edgeNext->uy[0]=0;edgeNext->uy[1]=0;edgeNext->uy[2]=0;edgeNext->uy[3]=0;edgeNext->uy[4]=0;
-  edgeNext->dy[0]=0;edgeNext->dy[1]=0;edgeNext->dy[2]=0;edgeNext->dy[3]=0;edgeNext->dy[4]=0;
-  if(index==1) edgeNext->uy[0]=y;
-  if(index==2) edgeNext->dy[0]=y;
-//  if(x==2) {
-//    printf("%s(%d) (%4d,%4d,%2d),%4d\n",__FILE__,__LINE__,x,y,index,edgeNext->y[2]);
-//    exit(0);
-//  }
+  memset(edgeNext->uy,0,20);
+  memset(edgeNext->dy,0,20);
+  y0=y;
+  if(index==1) {
+    if(UEY[x]!=0 && (y-UEY[x])>100)
+     y0=UEY[x];
+    else
+     UEY[x]=y;
+    edgeNext->uy[0]=y0;
+  }
+  if(index==2) {
+    if(DEY[x]!=0 && (DEY[x]-y)>300)
+     y0=DEY[x];
+    else
+     DEY[x]=y;
+    edgeNext->dy[0]=y0;
+  }
+//if(x==2) {
+//  printf("%s(%d) (%4d,%4d,%2d),%4d\n",__FILE__,__LINE__,x,y,index,edgeNext->y[2]);
+//  exit(0);
+//}
   if(edgeHead==NULL) {
      edgeHead=edgeNext;
      edgeTail=edgeNext;
@@ -1375,13 +1383,13 @@ void setEdge(int x,int y,int index) { //index 0:LR edge //1:upper //2:down
     if(index==1) { 
       for (i=0;i<5;i++) 
         if(edgeList->uy[i]==0) break;
-      if(i<=4) edgeList->uy[i]=y;
+      if(i<=4) edgeList->uy[i]=y0;
       sort(edgeList->uy,i);
     }
     if(index==2) {
       for (i=0;i<5;i++) 
         if(edgeList->dy[i]==0) break;
-      if(i<=4) edgeList->dy[i]=y;
+      if(i<=4) edgeList->dy[i]=y0;
       sort(edgeList->dy,i);
     }
     free(edgeNext); //no use
@@ -1441,6 +1449,7 @@ void DrawEdge(int width,int height,int index) {
         for(i=0;i<5;i++) {
           if(ylist[i]>(avg/2)) break;
         }
+        i=0;
       }
       if(index==2) {
         for(i=4;i>=0;i--) {
@@ -1455,7 +1464,7 @@ void DrawEdge(int width,int height,int index) {
         y1=avg;
       }
       else {  
-      //if( x0==0 || abs((y1-avg)/(1+edgeList->x-x1)) <= 60 ) 
+        if( x0==0 || abs((y1-avg)/(1+edgeList->x-x1)) <= 1 ) 
         {
           x0=x1;
           y0=y1;        
@@ -1464,11 +1473,13 @@ void DrawEdge(int width,int height,int index) {
           pos =y0*Ylinesize+x0;
           pos1=(y0-2)*Ylinesize+x0;
           pos2=(y0-2)*Ylinesize+x0-2;
+#if 0
           printf("%s(%d),%d,%d,%4d,%4d,%4d,%4d,%4d,%4d,%4d)\n",
                  __FILE__,__LINE__,index,i,avg,edgeList->x,ylist[0],ylist[1],ylist[2],ylist[3],ylist[4]);
           printf("%s(%d),(%3d,%3d,%3d),(%3d,%3d,%3d),(%3d,%3d,%3d),(%4d,%4d)-(%4d,%4d))\n",
                  __FILE__,__LINE__,
                  Rnow[pos],Gnow[pos],Bnow[pos],Rnow[pos1],Gnow[pos1],Bnow[pos1],Rnow[pos2],Gnow[pos2],Bnow[pos2],x0,y0,x1,y1);
+#endif     
           if(x0>0 && y0>0 && x1>0 && y1>0) {
 //          if(x0==1 || x1==1)
 //            printf("%s(%d),%d,(%4d,%4d)-(%4d,%4d)\n",__FILE__,__LINE__,index,x0,y0,x1,y1);
@@ -1483,9 +1494,10 @@ void DrawEdge(int width,int height,int index) {
             //if(x0>500) return;
               if(y0<y1) {
                 for(y3=y0;y3<=y1;y3++) {
-                  x3=y0+(x1-x0)*(y3-y0)/(y1-y0);      
+                  x3=x0+(x1-x0)*(y3-y0)/(y1-y0);      
                   if(x3>0 && x3<width) {
                     setref(x3,y3,GREENY,GREENU,GREENV);
+                 //   if(x3==320 && y3==320) {printf("%s(%d)\n",__FILE__,__LINE__);exit(0);}
                   }
                 }
               }
@@ -1494,6 +1506,7 @@ void DrawEdge(int width,int height,int index) {
                   x3=x1+(x0-x1)*(y3-y1)/(y0-y1);      
                   if(x3>0 && x3<width) {
                     setref(x3,y3,GREENY,GREENU,GREENV);
+                 //   if(x3==320 && y3==320) {printf("%s(%d)\n",__FILE__,__LINE__);exit(0);}
                   }
                 }
               }
@@ -1503,6 +1516,7 @@ void DrawEdge(int width,int height,int index) {
                 y3=y0+(y1-y0)*(x3-x0)/(x1-x0);      
                 if(y3>0 && y3<height) {
                   setref(x3,y3,GREENY,GREENU,GREENV);
+               //   if(x3==320 && y3==320) {printf("%s(%d)\n",__FILE__,__LINE__);exit(0);}
                 }
               }
             }
@@ -1514,11 +1528,11 @@ void DrawEdge(int width,int height,int index) {
   }
 }
 #define ax(v) (v>72? 255:0) 
-#define ARA 120
+#define ARA 80
 #define GBA 10
 #define GRA 10
 #define BRA 10
-#define YDA 8
+#define YDA 24
 //要取邊界
 int LBM(int x,int y) {
   int pos,pos1,pos2;
@@ -1529,7 +1543,7 @@ int LBM(int x,int y) {
   if ( ( (Gnow[pos]-Bnow[pos])>GBA && (Gnow[pos]-Rnow[pos])>GRA && Rnow[pos]>16 ) 
     && ( (Rnow[pos1]>ARA && Gnow[pos1]>ARA && Bnow[pos1]>ARA) 
        &&  !( (Gnow[pos1]-Bnow[pos1])>GBA && (Gnow[pos1]-Rnow[pos1])>GRA && Rnow[pos1]>16)
-    && (Vnow[pos]<Vnow[pos1]) //綠小
+//    && (Vnow[pos]<Vnow[pos1]) //綠小
        )
   ) { //綠下up
     return 1; //up
@@ -1537,7 +1551,7 @@ int LBM(int x,int y) {
   if ( ( (Gnow[pos]-Bnow[pos])>GBA && (Gnow[pos]-Rnow[pos])>GRA && Rnow[pos]>16 ) 
     && ( (Rnow[pos2]>ARA && Gnow[pos2]>ARA && Bnow[pos2]>ARA) 
         && !((Gnow[pos2]-Bnow[pos2])>GBA && (Gnow[pos2]-Rnow[pos2])>GRA && Rnow[pos2]>16)
-    && (Vnow[pos]<Vnow[pos2]) //綠小         
+//    && (Vnow[pos]<Vnow[pos2]) //綠小         
        )       
   ) { //綠上up
     return 2; //down
@@ -1549,11 +1563,11 @@ void calc_ref(int frame_index,int width,int height) {
   int x, y, x0, y0, x2, y2;
   int x60,y60,xs60,ys60;
   int index;
-  freeEdge();
-  ptGetFirstG();       
   xs60=width/60;
   ys60=height/60;
   if(frame_index>0) {
+    freeEdge();
+    ptGetFirstG();       
     for (y = 0; y < height; y++)  {
       y2 = y/2;
       y60=y/ys60;
@@ -1571,14 +1585,17 @@ void calc_ref(int frame_index,int width,int height) {
   //    if(marginalV(x2,y2)) {
   //    #endif
 
-        if(HXYG[x60][y60] >= ptFirstG->pt.w ) {
+      //if(HXYG[x60][y60] >= ptFirstG->pt.w ) 
+        if(true)
+        {
           index=LBM(x,y);
       //  if(index>0 && y>950 && y<1250) {
       //    printf("%s(%d)(%4d,%4d),%d\n",__FILE__,__LINE__,x,y,index);
       //    index=-1;
       //  }
           if(index>0 && y>ys60/2) {
-            setref(x,y,PURPLEY,PURPLEU,PURPLEV);
+          //setref(x,y,PURPLEY,PURPLEU,PURPLEV);
+            setref(x,y,WHITEY,WHITEU,WHITEV);
             setEdge(x,y,index);
           }
           else {
@@ -1592,7 +1609,7 @@ void calc_ref(int frame_index,int width,int height) {
       }
     }
     DrawEdge(width,height,1); //Up
-  //DrawEdge(width,height,2); //Down
+    DrawEdge(width,height,2); //Down
   //printf("%s(%d) (%d,%d) (%X,%X)\n",__FILE__,__LINE__,y,x,ptFirst,ptFirstG);
   } 
   else {
