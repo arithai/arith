@@ -298,7 +298,7 @@ print $title;
 </title>
 </head>
 <body background=<?php print $udir."/back0.gif" ?>>
-最新資訊,2025.06.20&nbsp;&nbsp;
+最新資訊,2025.07.23&nbsp;&nbsp;
 [<a href=
 http://<?php 
 if( isset( $_SERVER['SERVER_NAME'] ) && !empty( $_SERVER['SERVER_NAME'] )
@@ -318,7 +318,9 @@ print "[".$description;
 &nbsp;<a href=https://www.youtube.com/@arithai>植物影音</a>
 &nbsp;<a href=https://www.youtube.com/@arithai/shorts>短片</a><!--樹網(tree net) ---  description 可變!   ---->
 &nbsp;<a href=http://arith.online>ARITH.ONLINE</a>
-&nbsp;<a href=https://5price.blogspot.com>5PRICE屋價網</a><br>
+&nbsp;<a href=https://5price.blogspot.com>5PRICE屋價網</a>
+&nbsp;<a href=https://arithai.blogspot.com>ARITHAI 部落格</a>
+<br>
 <hr> 
 <?php
 function upload_back() { 

@@ -1565,7 +1565,7 @@ void calc_ref(int frame_index,int width,int height) {
   int index;
   xs60=width/60;
   ys60=height/60;
-  if(frame_index>0) {
+  if(frame_index%3!=0) {
     freeEdge();
     ptGetFirstG();       
     for (y = 0; y < height; y++)  {
@@ -1618,8 +1618,8 @@ void calc_ref(int frame_index,int width,int height) {
       for (x = 0; x < width; x++) {
         x2 = x/2;
         #if 1
-        setref(x,y,Ydiffnow[y*Ylinesize+x],Udiffnow[y2*Ulinesize + x2],Vdiffnow[y2*Vlinesize + x2]);
-      //setref(x,y,Ynow[y*Ylinesize+x],Unow[y2*Ulinesize + x2],Vnow[y2*Vlinesize + x2]);
+      //setref(x,y,Ydiffnow[y*Ylinesize+x],Udiffnow[y2*Ulinesize + x2],Vdiffnow[y2*Vlinesize + x2]);
+        setref(x,y,Ynow[y*Ylinesize+x],Unow[y2*Ulinesize + x2],Vnow[y2*Vlinesize + x2]);
         #endif
       }
     }
