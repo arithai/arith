@@ -1,0 +1,157 @@
+﻿
+.special {
+	font-weight: bold;
+	filter: glow(color=blue,strength=3); 
+	height:10px; 
+	color:white;
+	padding:1px; 
+	font-size:13px
+	}
+
+A.VORDER { font-size : 9pt; line-height : 15pt;}
+A.VORDER:link { color : #0066FF; text-decoration : none;}
+A.VORDER:visited { color : #0066FF; text-decoration : none;}
+A.VORDER:active { color : #0066FF; text-decoration : none;}
+A.VORDER:hover { color : #CC0000; text-decoration : underline;}
+	
+A.R { font-size : 9pt; line-height : 15pt;}
+A.R:link { color : lightgreen; text-decoration : none;}
+A.R:visited { color : lightgreen; text-decoration : none;}
+A.R:active { color : lightgreen; text-decoration : none;}
+A.R:hover { color : white; text-decoration : underline;}
+
+.TH0 { font-size : 9pt; line-height : 12pt; cursor:auto; color: #202020; padding:3 1 0 1; clip:  rect(   ); height: 12px; text-decoration: none; border-color: #FFFFFF #404040 #404040 #FFFFFF; background-color: #d4d0c8; white-space: nowrap; border-style: solid; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px}
+.TH1 { font-size : 9pt; line-height : 12pt; cursor:pointer;cursor:hand; color: #202020; padding:3 1 0 1; clip:  rect(   ); height: 12px; text-decoration: none; border-color: #FFFFFF #404040 #404040 #FFFFFF; background-color: #d4d0c8; white-space: nowrap; border-style: solid; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px}
+.CR { line-height : 11pt; cursor:pointer;cursor:hand; border-color: #777777 #777777 #777777 #777777; border-style: solid; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px}
+
+.TR1 { font-size : 9pt; line-height : 12pt; cursor:auto; color: #101010; padding:3 1 0 1; height: 12px; text-decoration: none; white-space: nowrap; background-color: #FFFFFE}
+.TR2 { font-size : 9pt; line-height : 12pt; cursor:auto; color: #101010; padding:3 1 0 1; height: 12px; text-decoration: none; white-space: nowrap; background-color: #F5F5F5}
+.TR3 { font-size : 9pt; line-height : 12pt; cursor:auto; color: #101010; padding:3 1 0 1; height: 12px; text-decoration: none; white-space: nowrap; background-color: #A0A0A0}
+.TR4 { font-size : 9pt; line-height : 12pt; cursor:auto; color: #101010; padding:3 1 0 1; height: 12px; text-decoration: none; white-space: nowrap; background-color: #FFFF55}
+.TR5 { font-size : 9pt; line-height : 12pt; cursor:auto; color: #101010; padding:3 1 0 1; height: 12px; text-decoration: none; white-space: nowrap; background-color: #FF0000}
+.TR6 { font-size : 9pt; line-height : 12pt; cursor:auto; color: #101010; padding:3 1 0 1; height: 12px; text-decoration: none; white-space: nowrap; background-color: #54FF9F}
+.TR7 { font-size : 9pt; line-height : 12pt; cursor:auto; color: #101010; padding:3 1 0 1; height: 12px; text-decoration: none; white-space: nowrap; background-color: pink}
+.F1 { font-size : 9pt; line-height : 12pt; color: #868686; text-decoration: none}
+.FREQUIRE { color: #FF0000}
+
+
+
+
+.TEXT1 { font-family: "Arial", "Helvetica", "san-serif"; font-size: 9pt; color: #666666; text-decoration: none}
+.TEXT1REQUIRE { font-family: "Arial", "Helvetica", "san-serif"; font-size: 9pt; color: #666666; text-decoration: none}
+.TEXT1UPPER { TEXT-TRANSFORM: uppercase;  font-family: "Arial", "Helvetica", "san-serif"; font-size: 9pt; color: #666666; text-decoration: none}
+
+.TEXT3 { color: #000066; font-size: 10pt; letter-spacing: 0; border: 1 solid #006699}
+.TEXT3REQUIRE { color: #000066; font-size: 10pt; letter-spacing: 0; border: 1 solid #006699}
+.TEXT3UPPER { TEXT-TRANSFORM: uppercase;  color: #000066; font-size: 10pt; letter-spacing: 0; border: 1 solid #006699}
+
+.box01UPPER {font-family:"新細明體","細明體",sans-serif,EUDC;TEXT-TRANSFORM: uppercase;  border-style: solid; background-color: #F7F8EB;border-color: #B0BB71; border-top-width: 0px; border-right-width: 0px; border-bottom-width: 1px; border-left-width: 0px;}
+
+.UPPER {TEXT-TRANSFORM: uppercase;}
+
+.TEXT_LEFT {text-align: right}
+
+.main-r9 {  font-family: "Arial", "Helvetica", "san-serif"; font-size: 9pt; color: #CC0000; text-decoration: none}
+
+.VIEW1 {  border-color: #FFFFFF}
+
+
+.text-c {
+	font-family: "Arial", "Helvetica", "sans-serif";
+	font-size: 9pt;
+	line-height: 16pt;
+	color: #333333;
+	text-decoration: none;
+}
+.text-b9 {
+	font-size: 9pt;
+	line-height: 16pt;
+	color: #000066;
+	text-decoration: none;
+}
+.text-r9 {
+	font-size: 9pt;
+	line-height: 16pt;
+	color: red;
+	text-decoration: none;
+}
+.button-9 {
+	font-size: 9pt;
+	color: #336699; 
+	text-decoration: none; 
+	background-color: #d6edfa; 
+	border-color: #ffffff #336699 #336699 #ffffff; 
+	left: 3px; clip:  rect(   ); 
+	cursor: hand; border-style: 
+	solid; border-top-width: 1px; 
+	border-right-width: 1px; 
+	border-bottom-width: 1px; 
+	border-left-width: 1px
+}
+.button-9[disabled] { 
+ color:Grey;
+/* Add other  styles here for disable button */ 
+} 
+.title-text-b9 {
+	font-size: 10pt;
+	line-height: 16pt;
+	color: #003399;
+	background-color: #E2FEFE;
+}.text-w9 {
+	font-family: "Arial", "Helvetica", "sans-serif";
+	font-size: 9pt;
+	line-height: 16pt;
+	color: #FFFFFF;
+	text-decoration: none;
+}
+
+.text-red9 {
+	font-size: 9pt;
+	line-height: 16pt;
+	color: #FF0000;
+	text-decoration: none;
+}
+.button-c9 {
+	font-size: 9pt;
+	color: #666666;
+	text-decoration: none;
+	background-color: #EEEEEE;
+	left: 3px;
+	clip:  rect(   );
+	cursor: hand;
+	border-top-width: 1px;
+	border-right-width: 1px;
+	border-bottom-width: 1px;
+	border-left-width: 1px;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	border-top-color: #ffffff;
+	border-right-color: #666666;
+	border-bottom-color: #666666;
+	border-left-color: #ffffff;
+}
+.button-c9[disabled] { 
+ color:Grey;
+/* Add other  styles here for disable button */ 
+} 
+.body-scrollbar {
+	SCROLLBAR-FACE-COLOR: #FFFFFF; 
+	SCROLLBAR-HIGHLIGHT-COLOR: #FFFFFF; 
+	SCROLLBAR-SHADOW-COLOR: #FFFFFF; 
+	SCROLLBAR-3DLIGHT-COLOR: #FFFFFF; 
+	SCROLLBAR-ARROW-COLOR: #000066; 
+	SCROLLBAR-TRACK-COLOR: #FFFFFF; 
+	SCROLLBAR-DARKSHADOW-COLOR: #FFFFFF
+}
+
+.fileTextButton {position:absolute;opacity:0;filter:alpha(opacity=0);cursor:pointer;cursor:hand;height:25px;}
+.fileOnlyButton {position:absolute;opacity:0;filter:alpha(opacity=0);cursor:pointer;cursor:hand;height:25px;width:53px;width:60px\0;/* IE8 or over */}
+*::-ms-backdrop, .fileOnlyButton {position:absolute;opacity:0;filter:alpha(opacity=0);cursor:pointer;cursor:hand;height:25px;width:60px;} /* IE11 only */
+@supports (-ms-ime-align:auto) {.fileOnlyButton {position:absolute;opacity:0;filter:alpha(opacity=0);cursor:pointer;cursor:hand;height:25px;width:60px;}} /* IE EDGE only */
+
+.block-top {
+ vertical-align: top;
+ padding-top: 0.1rem;
+}

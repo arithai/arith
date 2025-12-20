@@ -1,0 +1,762 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>面積換算</title>
+<link href="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/page.css" rel="stylesheet" type="text/css">
+<script src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/std.js"></script>
+<link href="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/query.css" rel="stylesheet" type="text/css">
+<style>
+.textfield{
+	font-family:"細明體";
+	font-size:14pt;
+	height:26px;
+}
+.textfield3{
+	font-family:"細明體";
+	font-size:14pt;
+	height:26px;
+}
+</style>
+<script>
+	var at = null;
+	var doFocus = true;
+	function calc() {
+		var st = at.value;
+		
+		while (st.indexOf(",") != -1)
+			st = st.replace(",","");
+		
+		at.value = addCommas(checkNum(st));
+					
+			/*						
+			1 平方公尺㎡
+			2 坪  
+			3 公 頃 ha 
+			4 甲  
+			5 分 
+			6 公 畝 a 
+			7 英 畝acre
+			8 市 畝
+			*/		
+			
+		if (at.value == "") {
+			findObj("text1").value = "";
+			findObj("text2").value = "";
+			findObj("text3").value = "";
+			findObj("text4").value = "";
+			findObj("text5").value = "";
+			findObj("text6").value = "";
+			findObj("text7").value = "";
+			findObj("text8").value = "";
+		}
+		else if (at == findObj("text1")) {
+			findObj("text2").value = addCommas(checkNum(checkNum(at.value)*0.3025,null,5,true));
+			findObj("text3").value = addCommas(checkNum(checkNum(at.value)*0.0001,null,5,true));
+			findObj("text4").value = addCommas(checkNum(checkNum(at.value)*0.000103,null,5,true));
+			findObj("text5").value = addCommas(checkNum(checkNum(at.value)*0.00103,null,5,true));
+			findObj("text6").value = addCommas(checkNum(checkNum(at.value)*0.01,null,5,true));
+			findObj("text7").value = addCommas(checkNum(checkNum(at.value)*0.00025,null,5,true));
+			findObj("text8").value = addCommas(checkNum(checkNum(at.value)*0.0015,null,5,true));
+		}
+		else if (at == findObj("text2")) {	
+			findObj("text1").value = addCommas(checkNum(checkNum(at.value)*3.3058,null,5,true));
+			findObj("text3").value = addCommas(checkNum(checkNum(at.value)*0.00033058,null,5,true));
+			findObj("text4").value = addCommas(checkNum(checkNum(at.value)*0.00034,null,5,true));
+			findObj("text5").value = addCommas(checkNum(checkNum(at.value)*0.0034,null,5,true));
+			findObj("text6").value = addCommas(checkNum(checkNum(at.value)*0.033058,null,5,true));
+			findObj("text7").value = addCommas(checkNum(checkNum(at.value)*0.00082,null,5,true));
+			findObj("text8").value = addCommas(checkNum(checkNum(at.value)*0.00496,null,5,true));
+		}
+		else if (at == findObj("text3")) {
+			findObj("text1").value = addCommas(checkNum(checkNum(at.value)*10000,null,5,true));
+			findObj("text2").value = addCommas(checkNum(checkNum(at.value)*3025,null,5,true));
+			findObj("text4").value = addCommas(checkNum(checkNum(at.value)*1.03102,null,5,true));
+			findObj("text5").value = addCommas(checkNum(checkNum(at.value)*10.3102,null,5,true));
+			findObj("text6").value = addCommas(checkNum(checkNum(at.value)*100,null,5,true));
+			findObj("text7").value = addCommas(checkNum(checkNum(at.value)*2.47106,null,5,true));	
+			findObj("text8").value = addCommas(checkNum(checkNum(at.value)*15,null,5,true));	
+		}
+		else if (at == findObj("text4")) {
+			findObj("text1").value = addCommas(checkNum(checkNum(at.value)*9699.17,null,5,true));
+			findObj("text2").value = addCommas(checkNum(checkNum(at.value)*2934,null,5,true));
+			findObj("text3").value = addCommas(checkNum(checkNum(at.value)*0.96992,null,5,true));
+			findObj("text5").value = addCommas(checkNum(checkNum(at.value)*10,null,5,true));
+			findObj("text6").value = addCommas(checkNum(checkNum(at.value)*96.9917,null,5,true));
+			findObj("text7").value = addCommas(checkNum(checkNum(at.value)*2.39672,null,5,true));	
+			findObj("text8").value = addCommas(checkNum(checkNum(at.value)*14.5488,null,5,true));	
+		}
+		else if (at == findObj("text5")) {
+			findObj("text1").value = addCommas(checkNum(checkNum(at.value)*969.917,null,5,true));
+			findObj("text2").value = addCommas(checkNum(checkNum(at.value)*293.4,null,5,true));
+			findObj("text3").value = addCommas(checkNum(checkNum(at.value)*0.096992,null,5,true));
+			findObj("text4").value = addCommas(checkNum(checkNum(at.value)*0.1,null,5,true));
+			findObj("text6").value = addCommas(checkNum(checkNum(at.value)*9.69917,null,5,true));
+			findObj("text7").value = addCommas(checkNum(checkNum(at.value)*0.239672,null,5,true));		
+			findObj("text8").value = addCommas(checkNum(checkNum(at.value)*1.45488,null,5,true));		
+		}
+		else if (at == findObj("text6")) {
+			findObj("text1").value = addCommas(checkNum(checkNum(at.value)*100,null,5,true));
+			findObj("text2").value = addCommas(checkNum(checkNum(at.value)*30.25,null,5,true));
+			findObj("text3").value = addCommas(checkNum(checkNum(at.value)*0.01,null,5,true));
+			findObj("text4").value = addCommas(checkNum(checkNum(at.value)*0.01031,null,5,true));
+			findObj("text5").value = addCommas(checkNum(checkNum(at.value)*0.1031,null,5,true));
+			findObj("text7").value = addCommas(checkNum(checkNum(at.value)*0.02471,null,5,true));	
+			findObj("text8").value = addCommas(checkNum(checkNum(at.value)*0.15,null,5,true));	
+		}
+		else if (at == findObj("text7")) {
+			findObj("text1").value = addCommas(checkNum(checkNum(at.value)*4046.85,null,5,true));
+			findObj("text2").value = addCommas(checkNum(checkNum(at.value)*1224.17,null,5,true));
+			findObj("text3").value = addCommas(checkNum(checkNum(at.value)*0.40469,null,5,true));
+			findObj("text4").value = addCommas(checkNum(checkNum(at.value)*0.41724,null,5,true));
+			findObj("text5").value = addCommas(checkNum(checkNum(at.value)*4.1724,null,5,true));
+			findObj("text6").value = addCommas(checkNum(checkNum(at.value)*40.4685,null,5,true));
+			findObj("text8").value = addCommas(checkNum(checkNum(at.value)*6.07029,null,5,true));
+		}
+		else if (at == findObj("text8")) {
+			findObj("text1").value = addCommas(checkNum(checkNum(at.value)*666.666,null,5,true));
+			findObj("text2").value = addCommas(checkNum(checkNum(at.value)*201.667,null,5,true));
+			findObj("text3").value = addCommas(checkNum(checkNum(at.value)*0.06667,null,5,true));
+			findObj("text4").value = addCommas(checkNum(checkNum(at.value)*0.06874,null,5,true));
+			findObj("text5").value = addCommas(checkNum(checkNum(at.value)*0.6874,null,5,true));
+			findObj("text6").value = addCommas(checkNum(checkNum(at.value)*6.66667,null,5,true));
+			findObj("text7").value = addCommas(checkNum(checkNum(at.value)*0.16441,null,5,true));
+		}
+	}
+	function f(t) {
+		if (doFocus) {
+			findObj("text1").className = "textfield form-control";
+			findObj("text2").className = "textfield form-control";
+			findObj("text3").className = "textfield form-control";
+			findObj("text4").className = "textfield form-control";
+			findObj("text5").className = "textfield form-control";
+			findObj("text6").className = "textfield form-control";
+			findObj("text7").className = "textfield form-control";
+			findObj("text8").className = "textfield form-control";
+			
+			findObj("text1").value = addCommas(findObj("text1").value);
+			findObj("text2").value = addCommas(findObj("text2").value);
+			findObj("text3").value = addCommas(findObj("text3").value);
+			findObj("text4").value = addCommas(findObj("text4").value);
+			findObj("text5").value = addCommas(findObj("text5").value);
+			findObj("text6").value = addCommas(findObj("text6").value);
+			findObj("text7").value = addCommas(findObj("text7").value);
+			findObj("text8").value = addCommas(findObj("text8").value);
+			
+			t.className = "textfield3";
+			at = t;
+			
+			var st = at.value;
+			
+			while (st.indexOf(",") != -1)
+				st = st.replace(",","");
+			
+			at.value = st;
+			setTextRange(at);
+		}
+	}
+	function ca() {		
+		findObj("text1").value = "";
+		findObj("text2").value = "";
+		findObj("text3").value = "";
+		findObj("text4").value = "";
+		findObj("text5").value = "";
+		findObj("text6").value = "";
+		findObj("text7").value = "";
+		findObj("text8").value = "";
+	}	
+</script>
+</head>
+<body>
+<form method="POST">
+<input name="action" type="Hidden">
+	
+<input name="r" type="Hidden" value="G">
+  
+
+
+<script>	
+	function clearSession() {
+		location = "clearSession.jsp?back="+encodeURIComponent(location);
+	}
+</script>
+
+
+
+
+
+
+
+  <div id="puptext1">
+    <br>
+    <table border="0" cellspacing="0" cellpadding="0" width="90%" align="center"><tbody><tr><td id="subitem021">
+     <div>
+      <ul>
+      	
+        <li><a href="https://eland.cyhg.gov.tw/query/casedo.jsp?menu=true&amp;type=R">登記類</a></li>
+      	
+        <li><a href="https://eland.cyhg.gov.tw/query/casedo.jsp?menu=true&amp;type=M">測量類</a></li>
+      	
+        <li><a href="https://eland.cyhg.gov.tw/query/valueprice.jsp?menu=true" id="skiplink">地價類</a></li>
+      	
+        <li><a href="https://eland.cyhg.gov.tw/query/empty.jsp?menu=true">相關連結專區</a></li>
+        
+      </ul>
+     </div> 
+    </td><td id="subitem022"><div>&nbsp;</div></td></tr>
+    <tr><td id="subitem021_btn"><div>&nbsp;</div></td><td id="subitem022_btn"><div>&nbsp;</div></td></tr></tbody></table>
+    <div id="text01">
+    	
+      <p class="smenu">
+         
+      	<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_01.gif" alt=""><a href="https://eland.cyhg.gov.tw/query/valueprice.jsp?menu=true">公告土地現值及公告地價</a>
+         
+      	<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_01.gif" alt=""><a href="https://eland.cyhg.gov.tw/query/valueprice_addr.jsp?menu=true">公告土地現值門牌查詢</a>
+         
+      	<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_01.gif" alt=""><a href="https://eland.cyhg.gov.tw/query/declareprice.jsp?menu=true">申報地價</a>
+         
+      	<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_01.gif" alt=""><a href="https://eland.cyhg.gov.tw/query/valuechange.jsp?menu=true">前次移轉現值</a>
+         
+      	<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_01.gif" alt=""><a href="http://www.etax.nat.gov.tw/etwmain/front/ETW158W9" target="_blank">土地增值稅試算</a>
+         
+      	<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_01.gif" alt=""><a href="https://eland.cyhg.gov.tw/query/areachange.jsp?menu=true&amp;type=P" id="skiplink">面積換算</a>
+              	
+      </p>
+
+      <div id="vline"><img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/spacer.gif" alt="" height="1"></div>
+
+      <a name="content" tabindex="1"></a>
+    </div>
+  </div>				
+	
+  <div id="puptext2">
+    <br>
+    <div id="text01">
+      <h2>面積換算</h2>
+      <center>
+      <table border="0" cellspacing="0" cellpadding="0" width="100%"><tbody><tr><td><div id="tbsch_title1"><p>面積換算</p></div></td><td width="31" height="100%"><div id="tbsch_title2"></div></td></tr>
+      <tr><td id="tbsch_ctn1">
+      <div>
+        <table border="0" cellspacing="0" cellpadding="0">
+          <tbody><tr>
+            <td align="right" width="120">
+				<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_07.gif" alt="" align="absmiddle">
+                平方公尺：
+            </td>
+            <td width="320">
+				<input type="text" onfocus="f(this);" onblur="if (text_onblur(this, '平方公尺', 999, null)) {doFocus = true;} else {doFocus = false;}" value="1" class="textfield3" name="text1" size="20" style="text-align:right"><font size="3">㎡</font>
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="right">
+				<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_07.gif" alt="" align="absmiddle">
+                坪：
+            </td>
+            <td>
+				<input type="text" onfocus="f(this);" onblur="if (text_onblur(this, '坪', 999, null)) {doFocus = true;} else {doFocus = false;}" value="0.3025" class="textfield form-control" name="text2" size="20" style="text-align:right">
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="right">
+				<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_07.gif" alt="" align="absmiddle">
+                公 頃：
+            </td>
+            <td>
+				<input type="text" onfocus="f(this);" onblur="if (text_onblur(this, '公頃', 999, null)) {doFocus = true;} else {doFocus = false;}" value="0.0001" class="textfield form-control" name="text3" size="20" style="text-align:right"><font size="2">ha</font>
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="right">
+				<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_07.gif" alt="" align="absmiddle">
+                甲：
+            </td>
+            <td>
+				<input type="text" onfocus="f(this);" onblur="if (text_onblur(this, '甲', 999, null)) {doFocus = true;} else {doFocus = false;}" value="0.0001" class="textfield form-control" name="text4" size="20" style="text-align:right">
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="right">
+				<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_07.gif" alt="" align="absmiddle">
+                分：
+            </td>
+            <td>
+				<input type="text" onfocus="f(this);" onblur="if (text_onblur(this, '分', 999, null)) {doFocus = true;} else {doFocus = false;}" value="0.00103" class="textfield form-control" name="text5" size="20" style="text-align:right">
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="right">
+				<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_07.gif" alt="" align="absmiddle">
+                公 畝：
+            </td>
+            <td>
+				<input type="text" onfocus="f(this);" onblur="if (text_onblur(this, '公畝', 999, null)) {doFocus = true;} else {doFocus = false;}" value="0.01" class="textfield form-control" name="text6" size="20" style="text-align:right"><font size="2">a</font>
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="right">
+				<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_07.gif" alt="" align="absmiddle">
+                英 畝：
+            </td>
+            <td>
+				<input type="text" onfocus="f(this);" onblur="if (text_onblur(this, '英畝', 999, null)) {doFocus = true;} else {doFocus = false;}" value="0.00025" class="textfield form-control" name="text7" size="20" style="text-align:right"><font size="2">acre</font>
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="right">
+				<img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/icon_07.gif" alt="" align="absmiddle">
+                市 畝：
+            </td>
+            <td>
+				<input type="text" onfocus="f(this);" onblur="if (text_onblur(this, '市畝', 999, null)) {doFocus = true;} else {doFocus = false;}" value="0.0015" class="textfield form-control" name="text8" size="20" style="text-align:right">
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="center" class="dline0x" colspan="4">
+            </td>
+          </tr>
+          
+          <tr>
+            <td align="left" colspan="4">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+              <input name="button1" onclick="calc();" type="button" class="button" value="計算">
+              <input name="button2" type="reset" class="button" value="全部清除">
+            </td>
+          </tr>
+          
+        </tbody></table>
+      </div>
+      </td><td width="31" height="100%" id="tbsch_ctn2"><div>&nbsp;</div></td></tr></tbody></table>
+      </center>
+      <div id="vline"><img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/spacer.gif" alt="" height="1"></div>
+
+          <p><img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/arrow_01.gif" alt="" border="0">&nbsp;&nbsp;<span class="darkblue">備註說明：</span><br>
+</p><ol type="1">
+
+<li>請先選擇欲換算的<strong class="red">原始</strong>單位欄位，輸入數字資料。
+</li><li>點擊 [計算] ，會將輸入值(黃色)，換算為各種其他的單位值。
+
+</li></ol><p></p>
+      <div id="vline"><img src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/spacer.gif" alt="" height="1"></div>
+    
+   
+
+
+
+
+<script>
+		removeCookie("reCaptcha_pass");
+</script>
+
+
+    <div id="footer-no"><table border="0" width="100%" cellpadding="0" cellspacing="0" id="text01">
+
+    	<tbody><tr><td></td><td align="right"><font size="2">本查詢系統資料以各地政事務所為準，本系統資料僅供參考。</font></td></tr>
+    	<tr><td></td><td align="right"><font size="2">如有疑義請逕洽所轄地政事務所：<table style="font-size: 13px"><tbody><tr><td>地政事務所</td>          <td>&nbsp;&nbsp;轄區範圍</td>                  <td>&nbsp;&nbsp;電話</td></tr><tr><td>朴子地政事務所</td>    <td>&nbsp;&nbsp;朴子市、六腳鄉、義竹鄉、布袋鎮、東石鄉</td>   <td>&nbsp;&nbsp;05-3792074</td></tr><tr><td>水上地政事務所</td>    <td>&nbsp;&nbsp;水上鄉、太保市、中埔鄉、鹿草鄉、大埔鄉</td>    <td>&nbsp;&nbsp;05-2680681</td></tr><tr><td>大林地政事務所</td>    <td>&nbsp;&nbsp;大林鎮、民雄鄉、 新港鄉、溪口鄉</td>           <td>&nbsp;&nbsp;05-2651110</td></tr><tr><td>竹崎地政事務所</td>    <td>&nbsp;&nbsp;竹崎鄉、梅山鄉、番路鄉、阿里山鄉</td>          <td>&nbsp;&nbsp;05-2614835</td></tr></tbody></table></font></td></tr>
+    	<tr><td><font size="2">最近更新日期:2025/11/28</font></td><td align="right"><font size="2">此功能，您是第 <span style="font-size: 18px; color: #f00">23,524</span> 位訪客。</font></td></tr>
+		    
+    
+	</tbody></table><div>
+		
+    
+
+
+
+
+
+<div id="changeDIV" style="position:absolute; visibility:hidden; z-index:5; top:-9999; left:-9999">
+	<iframe width="100" height="100" id="changeIFRAME" name="changeIFRAME" src="%E9%9D%A2%E7%A9%8D%E6%8F%9B%E7%AE%97_files/a.htm" frameborder="0" scrolling="auto"></iframe>
+</div>
+<script>
+	var isMobile;
+
+	
+	var SiteArea;
+	function changeSiteAreaEnd () {
+		if (self.divSelectWidth)
+			divSelectWidth(self.findObj(SiteArea));
+		var objR48 = findObj("R48check");
+		if (objR48 != null) {
+			self.findObj("R48").value = '';
+			if (objR48 == null)
+				objR48 = findObj("R48");			
+			for (var i=objR48.options.length-1; i>0; i--) {
+				objR48.options[i] = null;
+			}
+			if (self.divSelectWidth)
+				divSelectWidth(objR48);
+		}
+		self.findObj(SiteArea).value = '';
+		self.focus(); findObj(SiteArea).focus();
+		if (isMobile == null || !isMobile)
+			DisabledZone.off();
+	}
+
+	function changeSiteAreaajax (Site, SiteAreaTemp, ViewActionName, isMobileTemp) {
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		SiteArea = SiteAreaTemp;
+		if (isMobile == null || !isMobile)
+			DisabledZone.on();
+		startRequest("./"+(isMobile!=null?"../":"")+"ajaxAreaSiteArea.jsp?Site="+Site+"&SiteArea="+SiteArea+"&ViewActionName="+ViewActionName+"&dt="+(new Date()).getTime(), changeSiteAreaajaxEnd);
+	}
+		
+	function changeSiteAreaajaxEnd (xmlHttp) {	
+		var objSiteArea = findObj(SiteArea+"check");
+		if (objSiteArea == null)
+			objSiteArea = findObj(SiteArea);
+			
+		for (var i=objSiteArea.options.length-1; i>0; i--) {
+			objSiteArea.options[i] = null;
+		}
+		
+		var res = xmlHttp.responseText.replace(/^\s+|\s+$/g,"");
+		if (res != "") {
+			var optionsSiteArea = res.substring(0, res.length-3).split("#;#");
+			for (var i=0; i<optionsSiteArea.length; i++) {
+				var optionSiteArea = optionsSiteArea[i].split("#,#");
+				objSiteArea.options[i+1] = new Option(optionSiteArea[0], optionSiteArea[1]);
+			}
+		}
+		changeSiteAreaEnd();
+	}
+	
+	var R48;
+	function changeR48End () {
+		if (self.divSelectWidth)
+			divSelectWidth(self.findObj(R48));
+		self.findObj(R48).value = '';
+		self.focus(); findObj(R48).focus();
+		if (isMobile == null || !isMobile)
+			DisabledZone.off();
+	}
+
+	function changeR48ajax (SiteArea, R48Temp, ViewActionName, isMobileTemp) {
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		R48 = R48Temp;
+		if (isMobile == null || !isMobile)
+			DisabledZone.on();
+		startRequest("./"+(isMobile!=null?"../":"")+"ajaxAreaR48.jsp?SiteArea="+SiteArea+"&R48="+R48+"&ViewActionName="+ViewActionName+"&dt="+(new Date()).getTime(), changeR48ajaxEnd);
+	}
+		
+	function changeR48ajaxEnd (xmlHttp) {	
+		var objR48 = findObj(R48+"check");
+		if (objR48 == null)
+			objR48 = findObj(R48);
+			
+		for (var i=objR48.options.length-1; i>0; i--) {
+			objR48.options[i] = null;
+		}
+		
+		var res = xmlHttp.responseText.replace(/^\s+|\s+$/g,"");
+		if (res != "") {
+			var optionsR48 = res.substring(0, res.length-3).split("#;#");
+			for (var i=0; i<optionsR48.length; i++) {
+				var optionR48 = optionsR48[i].split("#,#");
+				objR48.options[i+1] = new Option(optionR48[0], optionR48[1]);
+			}
+		}
+		changeR48End();
+	}
+	
+	var Word;
+	function changeWordEnd () {
+		if (self.divSelectWidth)
+			divSelectWidth(self.findObj(Word));
+		self.findObj(Word).value = '';
+		self.focus(); findObj(Word).focus();
+		if (isMobile == null || !isMobile)
+			DisabledZone.off();
+	}
+
+	function changeWordajax (Site, WordTemp, ViewActionName, TypeRM, isMobileTemp, isCheckCross) {		
+		if (TypeRM == null) {
+			TypeRM = "R";
+		}
+		else {
+			if (TypeRM[0] != null && TypeRM[0].checked != null) {
+				if (TypeRM[0].checked)
+					TypeRM = "R";
+				else if (TypeRM[1].checked)
+					TypeRM = "M";
+				else if (TypeRM[2].checked)
+					TypeRM = "C";
+			}
+			else if (TypeRM.value != null) {
+				TypeRM = TypeRM.value;
+			}			
+		}
+		
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		Word = WordTemp;
+		if (isMobile == null || !isMobile)
+			DisabledZone.on();
+		startRequest("./"+(isMobile!=null?"../":"")+"ajaxAreaWord.jsp?Site="+Site+"&TypeRM="+TypeRM+"&Word="+Word+"&ViewActionName="+ViewActionName+"&isCheckCross="+isCheckCross+"&dt="+(new Date()).getTime(), changeWordajaxEnd);
+	}
+		
+	function changeWordajaxEnd (xmlHttp) {	
+		var objWord = findObj(Word+"check");
+		if (objWord == null)
+			objWord = findObj(Word);
+			
+		for (var i=objWord.options.length-1; i>0; i--) {
+			objWord.options[i] = null;
+		}
+		
+		var res = xmlHttp.responseText.replace(/^\s+|\s+$/g,"");
+		if (res != "") {
+			var optionsWord = res.substring(0, res.length-3).split("#;#");
+			for (var i=0; i<optionsWord.length; i++) {
+				var optionWord = optionsWord[i].split("#,#");
+				if (isMobile != null) {
+					var sWord = optionWord[0];
+					var iSub = sWord.indexOf(" (");
+					if (iSub != -1)
+						sWord = sWord.substring(0, iSub);
+
+					optionWord[0] = optionWord[1]+" - "+sWord;
+
+				}
+				objWord.options[i+1] = new Option(optionWord[0], optionWord[1]);
+			}
+		}
+		changeWordEnd();
+	}
+
+	var Zipcode3;
+	function changeZipcode3End () {
+		if (self.divSelectWidth)
+			divSelectWidth(self.findObj(Zipcode3));
+		self.focus(); findObj(Zipcode3).focus();
+		if (isMobile == null || !isMobile)
+			DisabledZone.off();
+	}
+
+	function changeZipcode3ajax (SiteArea, Zipcode3Temp, ViewActionName, isMobileTemp) {
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		Zipcode3 = Zipcode3Temp;
+		if (isMobile == null || !isMobile)
+			DisabledZone.on();
+		startRequest("./"+(isMobile!=null?"../":"")+"ajaxAreaZipcode3.jsp?SiteArea="+SiteArea+"&Zipcode3="+Zipcode3+"&ViewActionName="+ViewActionName+"&dt="+(new Date()).getTime(), changeZipcode3ajaxEnd);
+	}
+		
+	function changeZipcode3ajaxEnd (xmlHttp) {	
+		var objZipcode3 = findObj(Zipcode3+"check");
+		if (objZipcode3 == null)
+			objZipcode3 = findObj(Zipcode3);
+			
+		for (var i=objZipcode3.options.length-1; i>0; i--) {
+			objZipcode3.options[i] = null;
+		}
+		
+		var res = xmlHttp.responseText.replace(/^\s+|\s+$/g,"");
+		if (res != "") {
+			var optionsZipcode3 = res.substring(0, res.length-3).split("#;#");
+			for (var i=0; i<optionsZipcode3.length; i++) {
+				var optionZipcode3 = optionsZipcode3[i].split("#,#");
+				objZipcode3.options[i+1] = new Option(optionZipcode3[0], optionZipcode3[1]);
+			}
+		}
+		changeZipcode3End();
+	}
+		
+	function createXMLHttpRequest() {
+		var xmlHttp;
+		if (window.XMLHttpRequest) { // 如果可以取得XMLHttpRequest
+			xmlHttp = new XMLHttpRequest();  // Mozilla、Firefox、Safari 
+		}
+		else if (window.ActiveXObject) { // 如果可以取得ActiveXObject
+			xmlHttp = new ActiveXObject("Microsoft.XMLHTTP"); // Internet Explorer
+		}
+		return xmlHttp;
+	}
+	
+	function startRequest(url, updatePage) {
+		var xmlHttp = createXMLHttpRequest(); // 建立非同步請求物件
+		
+		if(!xmlHttp){
+			alert("您的瀏覽器不支援這個Ajax程式的功能");
+			return;
+		}
+		
+		var callback = updatePage;  // 設定callback函式
+		xmlHttp.onreadystatechange = function handleStateChange() {
+			if (xmlHttp.readyState == 4) { // 測試狀態是否請求完成
+				if (xmlHttp.status == 200) { // 如果伺服端回應OK
+					callback(xmlHttp);
+				}
+			}
+		};
+		
+		xmlHttp.open("GET", url);  // 開啟連結
+		xmlHttp.send(null);  // 傳送請求
+	}
+	
+	function changeR48div (SiteArea, R48Temp, ViewActionName, isMobileTemp) {
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		R48 = R48Temp;
+		if (isMobile == null || !isMobile)
+			DisabledZone.on();
+		changeIFRAME.location = "./"+(isMobile!=null?"../":"")+"divAreaR48.jsp?SiteArea="+SiteArea+"&R48="+R48+"&ViewActionName="+ViewActionName+"&"+(isMobile!=null?"isMobile=true&":"")+"dt="+(new Date()).getTime();
+	}
+
+	function changeSiteAreadiv (Site, SiteAreaTemp, ViewActionName, isMobileTemp) {
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		SiteArea = SiteAreaTemp;
+		if (isMobile == null || !isMobile)
+			DisabledZone.on();
+		changeIFRAME.location = "./"+(isMobile!=null?"../":"")+"divAreaSiteArea.jsp?Site="+Site+"&SiteArea="+SiteArea+"&ViewActionName="+ViewActionName+"&"+(isMobile!=null?"isMobile=true&":"")+"dt="+(new Date()).getTime();
+	}
+
+	function changeWorddiv (Site, WordTemp, ViewActionName, TypeRM, isMobileTemp, isCheckCross) {		
+		if (TypeRM == null) {
+			TypeRM = "R";
+		}
+		else {
+			if (TypeRM[0] != null && TypeRM[0].checked != null) {
+				if (TypeRM[0].checked)
+					TypeRM = "R";
+				else if (TypeRM[1].checked)
+					TypeRM = "M";
+				else if (TypeRM[2].checked)
+					TypeRM = "C";
+			}
+			else if (TypeRM.value != null) {
+				TypeRM = TypeRM.value;
+			}			
+		}
+		
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		Word = WordTemp;
+		if (isMobile == null || !isMobile)
+			DisabledZone.on();
+		changeIFRAME.location = "./"+(isMobile!=null?"../":"")+"divAreaWord.jsp?Site="+Site+"&TypeRM="+TypeRM+"&Word="+Word+"&ViewActionName="+ViewActionName+"&isCheckCross="+isCheckCross+"&"+(isMobile!=null?"isMobile=true&":"")+"dt="+(new Date()).getTime();
+	}
+
+	function changeZipcode3div (SiteArea, Zipcode3Temp, ViewActionName, isMobileTemp) {
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		Zipcode3 = Zipcode3Temp;
+		if (isMobile == null || !isMobile)
+			DisabledZone.on();
+		changeIFRAME.location = "./"+(isMobile!=null?"../":"")+"divAreaZipcode3.jsp?SiteArea="+SiteArea+"&Zipcode3="+Zipcode3+"&ViewActionName="+ViewActionName+"&"+(isMobile!=null?"isMobile=true&":"")+"dt="+(new Date()).getTime();
+	}
+
+	var NextFocus;
+	function clearCalcdiv (clearKey, NextFocusTemp, isMobileTemp) {
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		NextFocus = NextFocusTemp;
+		if (isMobile == null || !isMobile)
+			DisabledZone.on();
+		changeIFRAME.location = "./"+(isMobile!=null?"../":"")+"divClearCalc.jsp?clearKey="+clearKey+"&"+(isMobile!=null?"isMobile=true&":"")+"dt="+(new Date()).getTime();
+	}
+
+	function clearCalcEnd () {
+		if (isMobile == null || !isMobile) {
+			self.focus(); findObj(NextFocus).focus();
+		}
+		if (isMobile == null || !isMobile)
+			DisabledZone.off();
+	}
+	
+	function clearCalcajax (clearKey, NextFocusTemp, isMobileTemp) {
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		NextFocus = NextFocusTemp;
+		if (isMobile == null || !isMobile)
+			DisabledZone.on();
+		startRequest("./"+(isMobile!=null?"../":"")+"ajaxClearCalc.jsp?clearKey="+clearKey+"&dt="+(new Date()).getTime(), clearCalcajaxEnd);
+	}
+		
+	function clearCalcajaxEnd (xmlHttp) {		
+		var res = xmlHttp.responseText.replace(/^\s+|\s+$/g,"");
+		if (res != "") {
+		}
+		clearCalcEnd();
+	}
+
+	function formReset () {
+		setTimeout(function() {
+				document.forms[0].reset();
+			}, 100);
+	}		
+
+	function checkNumImagediv (ansKey, reqType, sPath, isMobileTemp) {
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		//if (isMobile == null || !isMobile)
+			//DisabledZone.on();
+		changeIFRAME.location = "./"+(isMobile!=null?"../":"")+"divCheckNumImage.jsp?reqType="+reqType+"&sPath="+encodeURIComponent(sPath)+"&"+(isMobile!=null?"isMobile=true&":"")+"ansKey="+ansKey+"&dt="+(new Date()).getTime();
+	}
+
+	function checkNumImageEnd () {
+		callbackCheck(true);
+		//if (isMobile == null || !isMobile)
+			//DisabledZone.off();
+	}
+	
+	function checkNumImageajax (ansKey, reqType, sPath, isMobileTemp) {
+		if (isMobileTemp != null)
+			isMobile = isMobileTemp;
+		//if (isMobile == null || !isMobile)
+			//DisabledZone.on();
+		startRequest("./"+(isMobile!=null?"../":"")+"ajaxCheckNumImage.jsp?reqType="+reqType+"&sPath="+encodeURIComponent(sPath)+"&ansKey="+ansKey+"&dt="+(new Date()).getTime(), checkNumImageajaxEnd);
+	}
+		
+	function checkNumImageajaxEnd (xmlHttp) {		
+		var res = xmlHttp.responseText.replace(/^\s+|\s+$/g,"");
+		if (res != "") {
+			alert(res);
+			if (res == "連線已逾時，請重新驗證!")
+				change(findObj('dynaNum'));
+			else
+				setTextRange(findObj('g-image-response'));			
+		}
+		else
+			checkNumImageEnd();
+	}
+			
+</script>
+
+
+    </div><br>
+  	  <table border="0" width="100%" cellpadding="0" cellspacing="0" id="text01"><tbody><tr><td>&nbsp;</td><td width="350">
+	      <div style="font-size: 13px">	 
+			地籍測量常用面積單位換算：<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;1公頃 = 1.0310甲 = 100公畝 = 10,000平方公尺 = 3,025坪<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;1平方公尺 = 0.3025坪<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;10平方公尺 =  0.1公畝 = 3.025坪<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;100平方公尺 = 1公畝 = 30.25坪<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;1坪 = 3.3058平方公尺<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;1甲 = 0.9699公頃 = 2,934坪<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;1分 = 0.0970公頃 = 293.4坪<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;1厘 = 0.0097公頃 = 29.34坪<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;1毫 = 0.00097公頃 = 2.934坪<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;1絲 = 0.000097公頃 = 0.2934坪<br>
+			&nbsp;&nbsp;&nbsp;&nbsp;1市畝 = 666.67平方公尺 = 0.06667公頃 = 201.667坪
+	    </div>
+	  </td></tr></tbody></table>
+  </div>
+
+
+
+
+<script>
+
+						
+
+
+null
+</script></div></div></form></body></html>
