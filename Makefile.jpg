@@ -1,0 +1,20 @@
+CC = g++
+INCLUDES = -I/usr/include/SDL2/ -I../stb
+CFLAGS = -Wall -Wextra 
+LIBS = -lSDL2 -lSDL2_image -lm
+SRCS = sdl_jpg.cpp
+OBJS = $(SRCS:.cpp=.o)
+MAIN = sdl_jpg
+
+$(MAIN): $(OBJS)
+	$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LIBS)
+
+.c.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+.cpp.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+clean: 
+	$(RM) *.o *~ $(MAIN)
+
