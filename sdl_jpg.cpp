@@ -6,10 +6,11 @@
 #include <math.h>
 #include <cstring>
 #include <vector>
+#define MAX_LINE_LENGTH 256
 struct Button {
   SDL_Rect rect;
   bool isPressed;
-  char fstr[19];
+  char fstr[MAX_LINE_LENGTH];
 };
 bool isMouseOver(int mx, int my, const SDL_Rect& rect) {
   return (mx >= rect.x && mx <= rect.x + rect.w &&
@@ -17,14 +18,14 @@ bool isMouseOver(int mx, int my, const SDL_Rect& rect) {
 }
 #include <unistd.h>
 SDL_Point pt[3][20];
+
 SDL_Point ptClick;
 int nPt[3];
 FILE *ptFile=NULL;
-char fDirectory[30];
-char ptfname[256];
+char fDirectory[MAX_LINE_LENGTH];
+char ptfname[MAX_LINE_LENGTH];
 char picSN[20];
 int NpicSN;
-#define MAX_LINE_LENGTH 256
 char buffer[MAX_LINE_LENGTH];
 void initfDirectory(void) {
   int len;
@@ -52,11 +53,13 @@ void initfDirectory(void) {
 void initpicSN(void) {
   int i,x,j;
   char snstr[6];
-  if(fDirectory[0]==0) return;
+  if(fDirectory[0]==0) {
+    printf("initpicSN no Directory\n");
+    return;
+  }
   sprintf(ptfname,"%s/data.txt",fDirectory);  
   if (access(ptfname, F_OK) == 0) {
     // file exists
-    printf("ptfname=%s\n",ptfname);
     ptFile = fopen(ptfname,"rt");
 
     // Read line-by-line until fgets returns NULL
@@ -75,6 +78,7 @@ void initpicSN(void) {
       if(i>15) break;
     }
     if(ptFile!=NULL) fclose(ptFile); ptFile=NULL;
+    printf("ptfname=%s,NpicSN=%d\n",ptfname,NpicSN);
   }
 }
 void initPoint(int picID) {
@@ -84,7 +88,7 @@ void initPoint(int picID) {
   char *split;
   ptClick.x = -1;
   ptClick.y = -1;
-  sprintf(ptfname,"%s/point%d.txt",fDirectory,picID);  
+  sprintf(ptfname,"%s/point%d.txt",fDirectory,picSN[picID]);  
   if (access(ptfname, F_OK) == 0) {
     // file exists
     ptFile = fopen(ptfname,"rt");
@@ -98,7 +102,7 @@ void initPoint(int picID) {
           strcpy(coor,split+1);
           y=atoi(coor);
           pt[picID][totp].x=x; pt[picID][totp].y=y;
-          printf("[%d],x=%4d,y=%4d\n", totp,pt[picID][totp].x, pt[picID][totp].y);
+          printf("%s,(picID=%d),[%d],x=%4d,y=%4d\n", ptfname,picID,totp,pt[picID][totp].x, pt[picID][totp].y);
           totp++;
           if(totp>15) break;
         } 
@@ -129,7 +133,7 @@ int putPoint(int picID,int x,int y) {
   if(getPoint(picID,x,y)==-1) 
   {
     pt[picID][n].x=x;pt[picID][n].y=y;
-    sprintf(ptfname,"point%d.txt",picID);  
+    sprintf(ptfname,"%s/point%d.txt",fDirectory,picSN[picID]);  
     n++;if(n>15) n=15; nPt[picID]=n; 
     ptFile = fopen(ptfname,"wt");
     for(i=0;i<nPt[picID];i++) {
@@ -142,7 +146,7 @@ int putPoint(int picID,int x,int y) {
   }
   return n;
 }
-int nowpicID=0;
+int nowpicID=1;
 void DrawCircle(SDL_Renderer *renderer, int32_t centreX, int32_t centreY, int32_t radius) {
     const int32_t diameter = (radius * 2);
     int32_t x = (radius - 1);
@@ -183,14 +187,17 @@ Button myButton[4]= { { { 100, 90, 80, 80 }, false, "" },
                     };
 const int width = 2160;
 const int height = 3840;
-void Draw4K(SDL_Surface* surface,SDL_Renderer* renderer0) {
+// Set up source rectangle (e.g., cropping a 400x300 chunk starting at x=50, y=50)
+SDL_Rect srcRect = {1200, 1000, 1056, 594};
+
+void Draw4K(SDL_Surface* surface,SDL_Renderer* renderer0, int yid) {
     SDL_Rect img_rect2;
     img_rect2.x    = 0;
     img_rect2.y    = 0;
     img_rect2.w    = width;
     img_rect2.h    = height;
     // Create a hidden window & 4K software renderer
-    SDL_Surface* surface3 = IMG_Load(myButton[0].fstr);
+    SDL_Surface* surface3 = IMG_Load(myButton[yid].fstr);
 //  SDL_Window* window2 = SDL_CreateWindow("4K Circle", 0, 0, width, height, SDL_WINDOW_HIDDEN);
     SDL_Window* window2 = SDL_CreateWindow("4K Circle", 0, 0, width, height, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer2 = SDL_CreateRenderer(window2, -1, SDL_RENDERER_SOFTWARE);
@@ -206,12 +213,21 @@ void Draw4K(SDL_Surface* surface,SDL_Renderer* renderer0) {
 
     // Draw a white circle in the center with a radius of 500 pixels
     printf("%d\n",__LINE__);
-//  SDL_SetRenderDrawColor(renderer2, 255, 255, 255, 255);
-//  SDL_RenderClear(renderer2);
+//    SDL_SetRenderDrawColor(renderer2, 255, 255, 255, 255);
+//    SDL_RenderClear(renderer2);
     SDL_RenderCopy(renderer2, texture2, NULL, &img_rect2); 
 //  SDL_RenderPresent(renderer2);    //present renderer
-    SDL_SetRenderDrawColor(renderer2, 0,  0, 0, 255);
-    DrawCircle(renderer2, 100, 100, 100);   
+//    SDL_SetRenderDrawColor(renderer2, 0,  0, 0, 255);
+//    DrawCircle(renderer2, 100, 100, 100); 
+
+        int n=nPt[0];
+        if(n>10) n=10;
+        for(int i=0;i<n;i++) {
+//        circleColor(renderer, pt[nowpicID][i].x, pt[nowpicID][i].y, 50, 0xFF0000FF);
+          SDL_SetRenderDrawColor(renderer2, 0, 0, 255, 255); 
+          DrawCircle(renderer2, pt[nowpicID][i].x-srcRect.x, pt[nowpicID][i].y-srcRect.y, 400);
+        }
+  
     SDL_RenderPresent(renderer2);    //present renderer
     SDL_Delay(500);
 //  SDL_RenderPresent(renderer2);
@@ -237,7 +253,7 @@ void Draw4K(SDL_Surface* surface,SDL_Renderer* renderer0) {
 
     // Save as 4K JPG (quality: 90)
 //  stbi_write_jpg("output_4k.jpg", width, height, 4, pixels.data(), 90);
-    sprintf(ptfname,"%s/4k.jpg",fDirectory);  
+    sprintf(ptfname,"%s/y%04d.jpg",fDirectory,yid);  
 //  stbi_write_jpg(ptfname, width, height, 4, pixels.data(), 90);
     stbi_write_jpg(ptfname, width, height, 4, pixels2.data(), 90);
 //  SDL_UnlockSurface(surface);
@@ -265,10 +281,10 @@ int main(int argc, char* argv[]) {
       printf("picSN[%4d]=%04d\n",i,picSN[i]);
     }
 
-    initPoint(picSN[0]);
+    initPoint(0);
 //  putPoint(0,7,7);
-    initPoint(picSN[1]);
-    initPoint(picSN[2]);
+    initPoint(1);
+    initPoint(2);
 
     // Initialize SDL_image for JPG
     int flags = IMG_INIT_JPG;
@@ -312,13 +328,9 @@ int main(int argc, char* argv[]) {
     SDL_QueryTexture(texture, NULL, NULL, &img_rect.w, &img_rect.h);
     printf("w=%4d,h=%4d\n",img_rect.w, img_rect.h);
 //  SDL_FreeSurface(surface); // We don't need the surface anymore
-    img_rect.x    = 0;
-    img_rect.y    = 0;
-    // Set up source rectangle (e.g., cropping a 400x300 chunk starting at x=50, y=50)
-    SDL_Rect srcRect =  {0, 0, 1056, 594};
      
     // Set up destination rectangle (same size for true 1:1 "real" size)
-    SDL_Rect destRect = {0, 0, 1056, 594}; 
+    SDL_Rect destRect = {0, 0, 960, 540}; 
     int zoomFactor = 20; // Pixels to scale per scroll
     int offset_x = 0, offset_y = 0;
     bool is_dragging = false;
@@ -389,7 +401,9 @@ int main(int argc, char* argv[]) {
                 }
                 else if (isMouseOver(mouse_x, mouse_y, myButton[3].rect)) {
                       myButton[3].isPressed = true;
-                      Draw4K(surface,renderer);
+                      Draw4K(surface,renderer,0);
+                      Draw4K(surface,renderer,1);
+                      Draw4K(surface,renderer,2);
                       nowpicID=-1;
                 }
                 else {
@@ -423,7 +437,7 @@ int main(int argc, char* argv[]) {
                     if(is_leftclick) {
                       // Left click action here
                       if(sqrt(x*x+y*y)<50) { 
-                        putPoint(nowpicID, ptClick.x, ptClick.y);
+                        putPoint(picSN[nowpicID], ptClick.x, ptClick.y);
                         printf("Click,%3d,%4d,%4d,%4d,%4d\n",nowpicID, mouse_x, mouse_y,
                            img_rect.x,img_rect.y);
                       }
@@ -473,29 +487,25 @@ int main(int argc, char* argv[]) {
         }
         else { 
           SDL_RenderCopy(renderer, texture, NULL, &img_rect);
-        }
-
+        }      
         if (myButton[0].isPressed) {
             SDL_SetRenderDrawColor(renderer, 46, 204, 113, 255); // Green click accent
         } else {
             SDL_SetRenderDrawColor(renderer, 52, 152, 219, 255); // Blue normal mode
         }
         SDL_RenderFillRect(renderer, &myButton[0].rect);
-              
         if (myButton[1].isPressed) {
             SDL_SetRenderDrawColor(renderer, 46, 204, 113, 255); // Green click accent
         } else {
             SDL_SetRenderDrawColor(renderer, 52, 152, 219, 255); // Blue normal mode
         }
         SDL_RenderFillRect(renderer, &myButton[1].rect);
-        
         if (myButton[2].isPressed) {
             SDL_SetRenderDrawColor(renderer, 46, 204, 113, 255); // Green click accent
         } else {
             SDL_SetRenderDrawColor(renderer, 52, 152, 219, 255); // Blue normal mode
         }
         SDL_RenderFillRect(renderer, &myButton[2].rect);
-
         if (myButton[3].isPressed) {
             SDL_SetRenderDrawColor(renderer, 46, 204, 113, 255); // Green click accent
         } else {
