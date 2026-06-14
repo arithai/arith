@@ -27,6 +27,7 @@ int NpicSN;
 #define MAX_LINE_LENGTH 256
 char buffer[MAX_LINE_LENGTH];
 void initfDirectory(void) {
+  int len;
   strcpy(ptfname,"data.txt"); 
   strcpy(fDirectory,"../VID");
   if (access(fDirectory, F_OK) == 0) {
@@ -38,6 +39,8 @@ void initfDirectory(void) {
     ptFile = fopen(ptfname,"rt");
     // Read line-by-line until fgets returns NULL
     while (fgets(buffer, sizeof(buffer), ptFile) != NULL) {
+      len=strlen(buffer);
+      if(buffer[len-1]==0x0A) buffer[len-1]=0;
       if (access(buffer, F_OK) == 0) {
         strcpy(fDirectory,buffer);
         break;
@@ -203,8 +206,8 @@ void Draw4K(SDL_Surface* surface,SDL_Renderer* renderer0) {
 
     // Draw a white circle in the center with a radius of 500 pixels
     printf("%d\n",__LINE__);
-//    SDL_SetRenderDrawColor(renderer2, 255, 255, 255, 255);
-//    SDL_RenderClear(renderer2);
+//  SDL_SetRenderDrawColor(renderer2, 255, 255, 255, 255);
+//  SDL_RenderClear(renderer2);
     SDL_RenderCopy(renderer2, texture2, NULL, &img_rect2); 
 //  SDL_RenderPresent(renderer2);    //present renderer
     SDL_SetRenderDrawColor(renderer2, 0,  0, 0, 255);
@@ -309,12 +312,13 @@ int main(int argc, char* argv[]) {
     SDL_QueryTexture(texture, NULL, NULL, &img_rect.w, &img_rect.h);
     printf("w=%4d,h=%4d\n",img_rect.w, img_rect.h);
 //  SDL_FreeSurface(surface); // We don't need the surface anymore
-
+    img_rect.x    = 0;
+    img_rect.y    = 0;
     // Set up source rectangle (e.g., cropping a 400x300 chunk starting at x=50, y=50)
-    SDL_Rect srcRect = {1200, 1000, 1056, 594};
+    SDL_Rect srcRect =  {0, 0, 1056, 594};
      
     // Set up destination rectangle (same size for true 1:1 "real" size)
-    SDL_Rect destRect = {0, 0, 960, 540}; 
+    SDL_Rect destRect = {0, 0, 1056, 594}; 
     int zoomFactor = 20; // Pixels to scale per scroll
     int offset_x = 0, offset_y = 0;
     bool is_dragging = false;
