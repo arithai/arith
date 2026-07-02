@@ -437,7 +437,7 @@ int main(int argc, char* argv[]) {
                     if(is_leftclick) {
                       // Left click action here
                       if(sqrt(x*x+y*y)<50) { 
-                        putPoint(picSN[nowpicID], ptClick.x, ptClick.y);
+                        putPoint( nowpicID, ptClick.x, ptClick.y);
                         printf("Click,%3d,%4d,%4d,%4d,%4d\n",nowpicID, mouse_x, mouse_y,
                            img_rect.x,img_rect.y);
                       }
