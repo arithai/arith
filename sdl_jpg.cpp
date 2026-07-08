@@ -188,7 +188,12 @@ Button myButton[4]= { { { 100, 90, 80, 80 }, false, "" },
 const int width = 2160;
 const int height = 3840;
 // Set up source rectangle (e.g., cropping a 400x300 chunk starting at x=50, y=50)
-SDL_Rect srcRect = {1200, 1000, 1056, 594};
+//SDL_Rect srcRect = {1200, 1000, 1056, 594};
+SDL_Rect srcRect   = {0, 0, 972, 576};
+// Set up destination rectangle (same size for true 1:1 "real" size)
+SDL_Rect srcMRect  = {0, 0, 972, 576};
+SDL_Rect destRect  = {0, 0, 972, 576}; 
+SDL_Rect destMRect = {0, 0, 972+108, 576+64}; 
 
 void Draw4K(SDL_Surface* surface,SDL_Renderer* renderer0, int yid) {
     SDL_Rect img_rect2;
@@ -329,9 +334,8 @@ int main(int argc, char* argv[]) {
     printf("w=%4d,h=%4d\n",img_rect.w, img_rect.h);
 //  SDL_FreeSurface(surface); // We don't need the surface anymore
      
-    // Set up destination rectangle (same size for true 1:1 "real" size)
-    SDL_Rect destRect = {0, 0, 960, 540}; 
-    int zoomFactor = 20; // Pixels to scale per scroll
+    int zoomFactorX = 18; // Pixels to scale per scroll
+    int zoomFactorY = 32; // Pixels to scale per scroll
     int offset_x = 0, offset_y = 0;
     bool is_dragging = false;
     bool is_zooming = false;
@@ -339,6 +343,7 @@ int main(int argc, char* argv[]) {
     bool is_leftclick = false;
     // Rendering loop 
     int quit = 0;
+    int is_extending = 0;
     SDL_Event e;
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
@@ -348,20 +353,61 @@ int main(int argc, char* argv[]) {
             else if (e.type == SDL_MOUSEWHEEL) {
                 is_dragging = false;
                 is_zooming = true;
-                SDL_QueryTexture(texture, NULL, NULL, &img_rect.w, &img_rect.h);
-                printf("w=%4d,h=%4d\n",img_rect.w, img_rect.h);
+                is_extending = 0;
+              //SDL_QueryTexture(texture, NULL, NULL, &img_rect.w, &img_rect.h);
                 // Adjust dimensions on mouse wheel
                 if (e.wheel.y > 0) { // Scroll Up (Zoom In)
-                    destRect.w += zoomFactor;
-                    destRect.h += zoomFactor;
-                    destRect.x -= zoomFactor / 2; // Center the zoom
-                    destRect.y -= zoomFactor / 2;
+                    destRect.w += zoomFactorX;
+                    destRect.h += zoomFactorY;
+                    destRect.x -= zoomFactorX / 2; // Center the zoom
+                    destRect.y -= zoomFactorY / 2;
                 } else if (e.wheel.y < 0) { // Scroll Down (Zoom Out)
-                    destRect.w -= zoomFactor;
-                    destRect.h -= zoomFactor;
-                    destRect.x += zoomFactor / 2;
-                    destRect.y += zoomFactor / 2;
+                    destRect.w -= zoomFactorX;
+                    destRect.h -= zoomFactorY;
+                    destRect.x += zoomFactorX / 2;
+                    destRect.y += zoomFactorY / 2;
                 }
+             // srcRect.x = img_rect.x;
+             // srcRect.y = img_rect.y;
+//Remapping if zoom out 2026.7.4
+                if(srcRect.x>0 && srcRect.y>0 && destRect.x>0 && destRect.y>0 && destRect.h>48) {
+                  printf("**[%4d,%4d,%4d,%4d],z=(%4d,%4d,%4d),s=(%4d,%4d,%4d,%4d),d=(%4d,%4d,%4d,%4d)\n",
+                       img_rect.x, img_rect.y, img_rect.w, img_rect.h,  
+                       zoomFactorX,zoomFactorY,e.wheel.y,
+                       srcRect.x, srcRect.y, srcRect.w, srcRect.h,
+                       destRect.x, destRect.y, destRect.w, destRect.h
+                       );
+                  srcMRect.x=srcRect.x-srcRect.x*destRect.x/972;
+                  srcMRect.y=srcRect.y-srcRect.y*destRect.y/576;
+                  srcMRect.w=972*srcRect.w/destRect.w;
+                  srcMRect.h=576*srcRect.h/destRect.h;
+                  if(srcMRect.h>3840) {
+                    srcMRect.x=0;
+                    srcMRect.y=0;
+                    srcMRect.w=2160;
+                    srcMRect.h=3840;
+
+                    destMRect.x=324;
+                    destMRect.y=0;
+                    destMRect.w=324;
+                    destMRect.h=576;               
+                  }  
+                  else {
+                    destMRect.x=0;
+                    destMRect.y=0;
+                    destMRect.w=972;
+                    destMRect.h=576;               
+                  }
+                  is_extending = 1;
+                }
+                SDL_QueryTexture(texture, NULL, NULL, &img_rect.w, &img_rect.h);
+
+                printf(">>[%4d,%4d,%4d,%4d],z=(%4d,%4d,%4d),s=(%4d,%4d,%4d,%4d),d=(%4d,%4d,%4d,%4d)\n",
+                       img_rect.x, img_rect.y, img_rect.w, img_rect.h,  
+                       zoomFactorX, zoomFactorY,e.wheel.y,
+                       srcMRect.x, srcMRect.y, srcMRect.w, srcMRect.h,
+                       destRect.x, destRect.y, destRect.w, destRect.h
+                       );
             }
             else if (e.type == SDL_MOUSEBUTTONDOWN) {
                 int mouse_x, mouse_y;
@@ -436,10 +482,12 @@ int main(int argc, char* argv[]) {
                     y = y-ptClick.y;
                     if(is_leftclick) {
                       // Left click action here
-                      if(sqrt(x*x+y*y)<50) { 
-                        putPoint( nowpicID, ptClick.x, ptClick.y);
+                      if(sqrt(x*x+y*y)<50) {
+                        printf("(%3d) x=%3d,y=%3d,px=%3d,py=%3d,now=%3d,pic=%3d\n",__LINE__,x,y,
+                          ptClick.x,ptClick.y,nowpicID,picSN[nowpicID]); 
+                        putPoint(nowpicID, ptClick.x, ptClick.y);
                         printf("Click,%3d,%4d,%4d,%4d,%4d\n",nowpicID, mouse_x, mouse_y,
-                           img_rect.x,img_rect.y);
+                           img_rect.x,img_rect.y,img_rect.w,img_rect.h);
                       }
                     }
                     ptClick.x=-1;
@@ -451,7 +499,10 @@ int main(int argc, char* argv[]) {
                    &&img_rect.y<=0 && (img_rect.y+img_rect.h)>=0 ) {
                    srcRect.x = -img_rect.x;
                    srcRect.y = -img_rect.y;
-                   zoomFactor = 20;
+                //   srcRect.w = img_rect.w;
+                //   srcRect.h = img_rect.h;
+                   zoomFactorX = 18;
+                   zoomFactorY = 32;
                    printf("sx=%4d,sy=%4d,ix=%4d,iy=%4d,iw=%4d,ih=%4d\n",
                       srcRect.x, srcRect.y,
                       img_rect.x,img_rect.y,img_rect.w,img_rect.h);
@@ -483,7 +534,13 @@ int main(int argc, char* argv[]) {
         // Draw the cropped portion
         if(is_zooming) 
         {
-          SDL_RenderCopy(renderer, texture, &srcRect, &destRect);
+          if(is_extending==1) {
+  //       printf("is_extending..(%4d,%4d,%4d,%4d)\n",destMRect.x,destMRect.y,destMRect.w,destMRect.h);
+           SDL_RenderCopy(renderer, texture, &srcMRect, &destMRect);            
+          }
+          else {
+            SDL_RenderCopy(renderer, texture, &srcRect, &destRect);
+          }
         }
         else { 
           SDL_RenderCopy(renderer, texture, NULL, &img_rect);
