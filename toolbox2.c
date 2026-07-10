@@ -117,7 +117,7 @@ typedef struct OutputStream {
 #include <stdbool.h>
 #define MAX_JUMP 2
 extern AVFrame *filt_frame;
-int frameWidth,frameHeight;
+extern int frameWidth,frameHeight;
 extern unsigned char *Ybefore;
 extern unsigned char *Ubefore;
 extern unsigned char *Vbefore;
@@ -246,7 +246,8 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
         }
     }
 #endif
-#if 1
+//follow below for ¾ð¸­
+#if 0
     calc_ref(frame_index,width,height);
     printf("%s(%d) (%d,%d) (%X,%X))\n",__FILE__,__LINE__,xs60,ys60,ptFirst,ptFirstG);
     for (y = 0; y < height; y++) {
@@ -548,7 +549,7 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
       }        
     }
 #endif
-#if 0
+#if 1
     if (frame_index>0) {
       printf("fill_yuv_image %s(%d),%3d,(%4d,%4d,%4d)\n",__FILE__,__LINE__,frame_index,
              Ylinesize,Ulinesize,Vlinesize);
@@ -561,11 +562,14 @@ void fill_yuv_image(AVFrame *pict, int frame_index,
           Y0 = Ybefore[y *   Ylinesize + x];
           U0 = Ubefore[y2 *  Ulinesize + x2];
           V0 = Vbefore[y2 *  Vlinesize + x2];
-          Y1 = Ydiffnow[y *  Ylinesize + x];
-          U1 = Udiffnow[y2 * Ulinesize + x2];
-          V1 = Vdiffnow[y2 * Vlinesize + x2];
-          G0 = YUV2G(Y0,U0,V0); if(G0<64) G0=0; else G0=255;
-          G1 = YUV2G(Y1,U1,V1); if(G1<64) G1=0; else G1=255;
+//        Y1 = Ydiffnow[y *  Ylinesize + x];
+//        U1 = Udiffnow[y2 * Ulinesize + x2];
+//        V1 = Vdiffnow[y2 * Vlinesize + x2];
+          Y1 = Ynow[y *  Ylinesize + x];
+          U1 = Unow[y2 * Ulinesize + x2];
+          V1 = Vnow[y2 * Vlinesize + x2];
+          G0 = YUV2G(Y0,U0,V0); if(G0<200) G0=0; else G0=255;
+          G1 = YUV2G(Y1,U1,V1); if(G1<200) G1=0; else G1=255;
           
           g = abs(G0-G1);
           

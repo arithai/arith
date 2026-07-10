@@ -216,7 +216,7 @@ void ptListAllG() {
 }
 //end G
 #define maxFirst 32
-ST_POINT_LIST *ptFirst;
+extern ST_POINT_LIST *ptFirst;
 void ptGetFirst() {
   ST_POINT_LIST *ptList,*ptListTemp;
   int x30,y30;
@@ -238,7 +238,7 @@ void ptGetFirst() {
 }
 
 #define maxFirstG 800
-ST_POINT_LIST *ptFirstG;
+extern ST_POINT_LIST *ptFirstG;
 void ptGetFirstG() {
   ST_POINT_LIST *ptListG,*ptListGTemp;
   int i=0;
@@ -304,7 +304,7 @@ extern unsigned char *Rnow;
 extern unsigned char *Gnow;
 extern unsigned char *Bnow;
 extern int Ylinesize,Ulinesize,Vlinesize;
-bool marginalV(x,y) {
+bool marginalV(int x,int y) {
   int diff;
 //printf("%s(%d) (%4d,%4d)\n",__FILE__,__LINE__,x,y);
   if(x>0 && y>0) { //v change!
@@ -321,9 +321,9 @@ bool marginalV(x,y) {
 int HXYR[60][60];
 int HXYG[60][60];
 int HXYB[60][60];
-int HXYY[60][60];
-int HXYU[30][30];
-int HXYV[30][30];
+extern int HXYY[60][60];
+extern int HXYU[30][30];
+extern int HXYV[30][30];
 #define XLENGTH 3840
 extern int UEY[XLENGTH];
 extern int DEY[XLENGTH];
@@ -332,7 +332,7 @@ int imaxG,imaxB,imaxR; //suppose they are leaves
 #define GGBA 30
 #define GGRA 20
 #define GRA  30
-int GreenType(pos) {
+int GreenType(int pos) {
   if ( ( (Gnow[pos]-Bnow[pos])>GGBA && (Gnow[pos]-Rnow[pos])>GGRA && Rnow[pos]>GRA ) 
   ) { //type green
     return 1; //type 2 green
@@ -559,14 +559,17 @@ bool marginalSlope(int x,int y,int ystart,float ratio,int width,int height) {
   int diff,i,x0,y0;
   int g=sign(ratio); //g<0 uppper g>0 lower
   for (i=-maxDeltaSlopeSpace;i<maxDeltaSlopeSpace;i++) {
+//  printf("%s(%d)\n",__FILE__,__LINE__);   
     x0=x+i;
     y0=(int)(ystart+ratio*x0);
-    if(x0>0 && y0>0 && x0<width && y0<height ) { //v change!
+    if(x0>2 && y0>2 && x0<width && (y0+2*g+1)<height ) { //v change!
+    //printf("%s(%d) (%3d,%3d,%3d,%3d)\n",__FILE__,__LINE__,x0,y0,width,height);   
       diff=abs(
         filt_frame->data[2][ (y0+2*g) * filt_frame->linesize[2] + x0 ]+
         filt_frame->data[2][      y0  * filt_frame->linesize[2] + (x0-2)]-
       2*filt_frame->data[2][      y0  * filt_frame->linesize[2] + x0    ]);
     //printf("%s(%d) diff=%d\n",__FILE__,__LINE__,diff);
+    //printf("%s(%d)\n",__FILE__,__LINE__);   
       if(diff > MAX_JUMP_SLOPE) 
        return true;  
     }
@@ -576,7 +579,7 @@ bool marginalSlope(int x,int y,int ystart,float ratio,int width,int height) {
 //XYZST
 //Xfi X frame index
 //PQR R rect
-int wp,
+extern int wp,
     Xfi,XposLine,Xc0,Xc1,Xw,
     Yfi,YposLine,Yc0,Yc1,Yw,
     Zfi,ZposLine,Zc0,Zc1,Zw,
@@ -952,9 +955,11 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
       G = YUV2G(Y,U,V);
       B = YUV2B(Y,U,V);
       R = R; G= G; B = B;       
-#endif    
+#endif 
+//    printf("%s(%d)\n",__FILE__,__LINE__);   
 //    printf("%s(%d)fi=%3d,s=(%4d,%4d),spos=%4d,(%d,%d),(%d,%d)\n",__FILE__,__LINE__,Sfi,x,y,SposSlope,Sc0,Sc1,w,Sw);        
       if(marginalSlope(x,y,y0,ratioT,width/2,height/2)){
+//      printf("%s(%d)\n",__FILE__,__LINE__);   
         if(isStart) {
           isStart=false;
           w=1;
@@ -969,6 +974,7 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
       //if(Tfi==7)printf("%s(%d)fi=%3d,t=(%4d,%4d),tpos=%4d,(%d,%d),(%d,%d),%d,%d\n",__FILE__,__LINE__,Tfi,x,y,TposSlope,Tc0,Tc1,w,Tw,Ty0,y0);        
       }
       else {
+//      printf("%s(%d)\n",__FILE__,__LINE__);   
         if(isStart==false) { 
           if(countJump) {
             countJump++;
@@ -993,6 +999,8 @@ void FindXYZSTLineList(AVFrame *pict, int frame_index,
         }
       }
     }
+ // printf("%s(%d)\n",__FILE__,__LINE__);   
+ 
     if(w>Tw) {
       Tw=w;
       slList->s.w=Tw;
@@ -1527,7 +1535,7 @@ void DrawEdge(int width,int height,int index) {
     edgeList=edgeList->next;
   }
 }
-#define ax(v) (v>72? 255:0) 
+#define ax(v) (v>72? 255:0)
 #define ARA 80
 #define GBA 10
 #define GRA 10
