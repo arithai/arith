@@ -1,6 +1,6 @@
 Test
 <?php
-$servername = "localhost";
+$servername = "127.0.0.1";
 $username = "root";
 $password = "111111";
 $database = "mysql";
@@ -20,13 +20,14 @@ if ($conn!=NULL) {
 else {
   echo "in php 3\n";
 }
-$sql = "select * from Species;";
+$sql = "select * from user;";
+//$sql = "select * from Species;";
 $result = $conn->query($sql);
 echo "rows:".$result->num_rows,"<br>\n";
 if ($result->num_rows > 0) {
   // output data of each row
   while($row = $result->fetch_assoc()) {
-    echo $row["cname"]. "<br>";
+    echo $row["User"]. "<br>";
   }
 } else {
   echo "0 results";
