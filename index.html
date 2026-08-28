@@ -58,14 +58,17 @@ border="0" title="visitors counter" alt="visitors counter"></a>
   const currentUrl = window.location.href;
 //alert(currentUrl);
   if (currentUrl.includes('github')) {
+    alert("github");
     document.getElementById('localhost').style.display="none";
-    document.getElementById('online').style.display="none";
-  }
-  if (currentUrl.includes('localhost')) {
     document.getElementById('online').style.display="none";
   }
   if (currentUrl.includes('online')) {
+    alert("online");
     document.getElementById('localhost').style.display="none";
+  }
+  if (currentUrl.includes('localhost')) {
+    alert("localhost");
+    document.getElementById('localhost').style.display="";
   }
 </script>
 <a href=http://arithai.com target=_top>
