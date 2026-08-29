@@ -57,7 +57,7 @@ border="0" title="visitors counter" alt="visitors counter"></a>
 <script>
   const currentUrl = window.location.href;
 //alert(currentUrl);
-  if (currentUrl.includes('github')) {
+  if (currentUrl.includes('github') || currentUrl.includes('gitlab')) {
   //alert("github");
     document.getElementById('localhost').style.display="none";
     document.getElementById('online').style.display="none";
